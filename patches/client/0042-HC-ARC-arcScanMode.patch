@@ -1,0 +1,47 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: way-zer <himc.wicp@gmail.com>
+Date: Sun, 19 May 2024 19:40:31 +0800
+Subject: [PATCH] HC: ARC arcScanMode
+
+---
+ core/src/mindustry/world/blocks/distribution/ItemBridge.java | 5 ++++-
+ core/src/mindustry/world/blocks/distribution/MassDriver.java | 3 +++
+ 2 files changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/core/src/mindustry/world/blocks/distribution/ItemBridge.java b/core/src/mindustry/world/blocks/distribution/ItemBridge.java
+index 97c69dd2cfe25d81b94b7031fbd5919672f0b8cf..c6a77a0f45c062d49994bb760785f417aa237a3b 100644
+--- a/core/src/mindustry/world/blocks/distribution/ItemBridge.java
++++ b/core/src/mindustry/world/blocks/distribution/ItemBridge.java
+@@ -494,7 +494,7 @@ public class ItemBridge extends Block{
+             int rel = relativeTo(other.x, other.y);
+             int rel2 = relativeTo(to.tileX(), to.tileY());
+ 
+-            return rel != rel2;
++            return rel == rel2;
+         }
+ 
+         @Override
+@@ -540,5 +540,8 @@ public class ItemBridge extends Block{
+                 wasMoved = moved = read.bool();
+             }
+         }
++        public boolean arcCheckAccept(Building source) {
++            return checkAccept(source, world.tile(link));
++        }
+     }
+ }
+\ No newline at end of file
+diff --git a/core/src/mindustry/world/blocks/distribution/MassDriver.java b/core/src/mindustry/world/blocks/distribution/MassDriver.java
+index 98699090447e0dfbe23c96ae470fad1f1815d81b..6a62f51d38469df08c3479246750c840bcd7b592 100644
+--- a/core/src/mindustry/world/blocks/distribution/MassDriver.java
++++ b/core/src/mindustry/world/blocks/distribution/MassDriver.java
+@@ -338,6 +338,9 @@ public class MassDriver extends Block{
+             return other instanceof MassDriverBuild entity && other.isValid() && other.efficiency > 0 && entity.block == block && entity.link == pos() && within(other, range);
+         }
+ 
++        public boolean arcLinkValid(){
++            return linkValid();
++        }
+         protected boolean linkValid(){
+             if(link == -1) return false;
+             return world.build(this.link) instanceof MassDriverBuild other && other.block == block && other.team == team && within(other, range);

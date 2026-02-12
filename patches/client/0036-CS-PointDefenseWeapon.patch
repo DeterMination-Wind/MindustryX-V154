@@ -1,0 +1,82 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: way-zer <himc.wicp@gmail.com>
+Date: Sun, 28 Apr 2024 18:51:56 +0800
+Subject: [PATCH] =?UTF-8?q?CS:=20=E4=BC=98=E5=8C=96=E8=A3=82=E8=A7=A3?=
+ =?UTF-8?q?=E6=80=A7=E8=83=BD=20PointDefenseWeapon?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ .../type/weapons/PointDefenseWeapon.java      | 24 ++++++++++++++++++-
+ .../defense/turrets/PointDefenseTurret.java   |  3 ++-
+ 2 files changed, 25 insertions(+), 2 deletions(-)
+
+diff --git a/core/src/mindustry/type/weapons/PointDefenseWeapon.java b/core/src/mindustry/type/weapons/PointDefenseWeapon.java
+index 86c1130dc184851ec4f62e975bc42b331c2d95a7..e00bdfaa62630f3d0ec3a6c8f70b42ea6337edc7 100644
+--- a/core/src/mindustry/type/weapons/PointDefenseWeapon.java
++++ b/core/src/mindustry/type/weapons/PointDefenseWeapon.java
+@@ -1,11 +1,13 @@
+ package mindustry.type.weapons;
+ 
++import arc.func.*;
+ import arc.graphics.*;
+ import arc.math.*;
+ import arc.math.geom.*;
+ import mindustry.content.*;
+ import mindustry.entities.*;
+ import mindustry.entities.units.*;
++import mindustry.game.*;
+ import mindustry.gen.*;
+ import mindustry.type.*;
+ 
+@@ -40,7 +42,27 @@ public class PointDefenseWeapon extends Weapon{
+ 
+     @Override
+     protected Teamc findTarget(Unit unit, float x, float y, float range, boolean air, boolean ground){
+-        return Groups.bullet.intersect(x - range, y - range, range*2, range*2).min(b -> b.team != unit.team && b.type().hittable, b -> b.dst2(x, y));
++        return findEnemyBullet(unit.team, x, y, range);
++    }
++
++    public static Bullet findEnemyBullet(Team team, float x, float y, float range){
++        var t = new Cons<Bullet>(){
++            Bullet min;
++            float minV = Float.MAX_VALUE;
++
++            @Override
++            public void get(Bullet b){
++                if(b.team != team && b.type().hittable){
++                    float v = b.dst2(x, y);
++                    if(v < minV){
++                        min = b;
++                        minV = v;
++                    }
++                }
++            }
++        };
++        Groups.bullet.intersect(x - range, y - range, range * 2, range * 2, t);
++        return t.min;
+     }
+ 
+     @Override
+diff --git a/core/src/mindustry/world/blocks/defense/turrets/PointDefenseTurret.java b/core/src/mindustry/world/blocks/defense/turrets/PointDefenseTurret.java
+index 79c1b4eb1019051064d6f8ec814a7498ffebe0db..17396093eb08717b953f406fbe8c857f157cbf76 100644
+--- a/core/src/mindustry/world/blocks/defense/turrets/PointDefenseTurret.java
++++ b/core/src/mindustry/world/blocks/defense/turrets/PointDefenseTurret.java
+@@ -12,6 +12,7 @@ import mindustry.content.*;
+ import mindustry.entities.*;
+ import mindustry.gen.*;
+ import mindustry.graphics.*;
++import mindustry.type.weapons.*;
+ import mindustry.world.meta.*;
+ 
+ import static mindustry.Vars.*;
+@@ -63,7 +64,7 @@ public class PointDefenseTurret extends ReloadTurret{
+ 
+             //retarget
+             if(timer(timerTarget, retargetTime)){
+-                target = Groups.bullet.intersect(x - range, y - range, range*2, range*2).min(b -> b.team != team && b.type().hittable, b -> b.dst2(this));
++                target = PointDefenseWeapon.findEnemyBullet(team, x, y, range);
+             }
+ 
+             //pooled bullets

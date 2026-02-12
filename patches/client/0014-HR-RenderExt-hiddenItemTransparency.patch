@@ -1,0 +1,223 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: way-zer <himc.wicp@gmail.com>
+Date: Sun, 18 Feb 2024 17:12:05 +0800
+Subject: [PATCH] =?UTF-8?q?HR(RenderExt)=20hiddenItemTransparency(?=
+ =?UTF-8?q?=E6=A1=A5=E6=A2=81=E4=BA=A4=E5=8F=89=E5=99=A8=E9=80=8F=E8=A7=86?=
+ =?UTF-8?q?)?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ .../world/DirectionalItemBuffer.java          | 11 +++++
+ core/src/mindustry/world/ItemBuffer.java      |  9 ++++
+ .../distribution/BufferedItemBridge.java      | 48 ++++++++++++++++++-
+ .../world/blocks/distribution/ItemBridge.java | 15 ++++++
+ .../world/blocks/distribution/Junction.java   | 30 ++++++++++++
+ 5 files changed, 112 insertions(+), 1 deletion(-)
+
+diff --git a/core/src/mindustry/world/DirectionalItemBuffer.java b/core/src/mindustry/world/DirectionalItemBuffer.java
+index f71aa74671a3ef59579ff3e1fde127406a1401ea..d15edc5db9297ae74cfa6f91e53a60b1cf8b8009 100644
+--- a/core/src/mindustry/world/DirectionalItemBuffer.java
++++ b/core/src/mindustry/world/DirectionalItemBuffer.java
+@@ -21,6 +21,17 @@ public class DirectionalItemBuffer{
+         return indexes[buffer] < buffers[buffer].length;
+     }
+ 
++    public Item getItem(int dir, int i){
++        if(i >= indexes[dir]) return null;
++        return content.item(BufferItem.item(buffers[dir][i]));
++    }
++
++    public float getTime(int dir, int i){
++        if(i >= indexes[dir]) return Float.MAX_VALUE;
++        return BufferItem.time(buffers[dir][i]);
++    }
++
++
+     public void accept(int buffer, Item item){
+         if(!accepts(buffer)) return;
+         buffers[buffer][indexes[buffer]++] = BufferItem.get(item.id, Time.time);
+diff --git a/core/src/mindustry/world/ItemBuffer.java b/core/src/mindustry/world/ItemBuffer.java
+index d91da022ce4ca749164958cf8fc4438ddf777b23..1b8ac44e8773af0b69e40f284a1dfff5f523c040 100644
+--- a/core/src/mindustry/world/ItemBuffer.java
++++ b/core/src/mindustry/world/ItemBuffer.java
+@@ -16,6 +16,15 @@ public class ItemBuffer{
+         this.buffer = new long[capacity];
+     }
+ 
++    public Item getItem(int i){
++        if(i < 0 || i >= index) return null;
++        return content.item(TimeItem.item(buffer[i]));
++    }
++    public float getTime(int i){
++        if(i < 0 || i >= index) return Float.MAX_VALUE;
++        return  TimeItem.time(buffer[i]);
++    }
++
+     public boolean accepts(){
+         return index < buffer.length;
+     }
+diff --git a/core/src/mindustry/world/blocks/distribution/BufferedItemBridge.java b/core/src/mindustry/world/blocks/distribution/BufferedItemBridge.java
+index f14c73a48307a043a7562f0015f6240e50425c9d..c79a5c21485da2f6c8a9daad1ba7877819f43775 100644
+--- a/core/src/mindustry/world/blocks/distribution/BufferedItemBridge.java
++++ b/core/src/mindustry/world/blocks/distribution/BufferedItemBridge.java
+@@ -1,10 +1,18 @@
+ package mindustry.world.blocks.distribution;
+ 
++import arc.graphics.g2d.*;
++import arc.math.*;
++import arc.math.geom.*;
++import arc.util.*;
+ import arc.util.io.*;
+ import mindustry.gen.*;
++import mindustry.graphics.*;
+ import mindustry.type.*;
+ import mindustry.world.*;
+ import mindustry.world.meta.*;
++import mindustryX.features.*;
++
++import static mindustry.Vars.*;
+ 
+ public class BufferedItemBridge extends ItemBridge{
+     public final int timerAccept = timers++;
+@@ -19,7 +27,7 @@ public class BufferedItemBridge extends ItemBridge{
+         hasItems = true;
+         canOverdrive = true;
+     }
+-    
++
+     @Override
+     public void setStats(){
+         super.setStats();
+@@ -51,6 +59,44 @@ public class BufferedItemBridge extends ItemBridge{
+             dump();
+         }
+ 
++        @Override
++        public void draw(){
++            super.draw();
++
++            if(RenderExt.hiddenItemTransparency > 0){
++                Draw.z(Layer.power + 0.1f);
++                Tile other = world.tile(link);
++
++                float begx, begy, endx, endy;
++                if(!linkValid(tile, other)){
++                    begx = x - tilesize / 2f;
++                    begy = y - tilesize / 2f;
++                    endx = x + tilesize / 2f;
++                    endy = y - tilesize / 2f;
++                }else{
++                    int i = tile.absoluteRelativeTo(other.x, other.y);
++                    float ex = other.worldx() - x - Geometry.d4(i).x * tilesize / 2f,
++                    ey = other.worldy() - y - Geometry.d4(i).y * tilesize / 2f;
++                    float warmup = state.isEditor() ? 1f : this.warmup;
++                    ex *= warmup;
++                    ey *= warmup;
++
++                    begx = x + Geometry.d4(i).x * tilesize / 2f;
++                    begy = y + Geometry.d4(i).y * tilesize / 2f;
++                    endx = x + ex;
++                    endy = y + ey;
++                }
++                Item item;
++                for(int i = 0; (item = buffer.getItem(i)) != null; i++){
++                    float time = buffer.getTime(i);
++                    float p = Math.min(((Time.time - time) * timeScale / speed), (float)(bufferCapacity - i) / bufferCapacity);
++
++                    Draw.alpha(RenderExt.hiddenItemTransparency / 100f);
++                    Draw.rect(item.fullIcon, Mathf.lerp(begx, endx, p), Mathf.lerp(begy, endy, p), 4f, 4f);
++                }
++            }
++        }
++
+ 
+         @Override
+         public void write(Writes write){
+diff --git a/core/src/mindustry/world/blocks/distribution/ItemBridge.java b/core/src/mindustry/world/blocks/distribution/ItemBridge.java
+index 6213a8a2a05f46c647a3deb3a2bbcf8be922b120..97c69dd2cfe25d81b94b7031fbd5919672f0b8cf 100644
+--- a/core/src/mindustry/world/blocks/distribution/ItemBridge.java
++++ b/core/src/mindustry/world/blocks/distribution/ItemBridge.java
+@@ -17,6 +17,7 @@ import mindustry.input.*;
+ import mindustry.type.*;
+ import mindustry.world.*;
+ import mindustry.world.meta.*;
++import mindustryX.features.*;
+ 
+ import static mindustry.Vars.*;
+ 
+@@ -364,6 +365,20 @@ public class ItemBridge extends Block{
+         public void draw(){
+             super.draw();
+ 
++            //draw each item this bridge have
++            if(items != null && RenderExt.hiddenItemTransparency > 0){
++                Draw.z(Layer.power + 0.1f);
++                Draw.color(Color.white, RenderExt.hiddenItemTransparency / 100f);
++                int loti = 0;
++                for(int iid = 0; iid < items.length(); iid++){
++                    for(int itemid = 1; itemid <= items.get(iid); itemid++){
++                        Draw.rect(content.item(iid).fullIcon,
++                        x, y - tilesize / 2f + 1f + 0.6f * (float)(loti++), 4f, 4f
++                        );
++                    }
++                }
++            }
++
+             Draw.z(Layer.power);
+ 
+             Tile other = world.tile(link);
+diff --git a/core/src/mindustry/world/blocks/distribution/Junction.java b/core/src/mindustry/world/blocks/distribution/Junction.java
+index e0d6735be241f6fae1927d846f0d41c6f8d09366..f3b64ae8c101ad3d900ee008f3d27c6b1705b022 100644
+--- a/core/src/mindustry/world/blocks/distribution/Junction.java
++++ b/core/src/mindustry/world/blocks/distribution/Junction.java
+@@ -1,11 +1,17 @@
+ package mindustry.world.blocks.distribution;
+ 
++import arc.graphics.*;
++import arc.graphics.g2d.*;
++import arc.math.*;
++import arc.math.geom.*;
+ import arc.util.*;
+ import arc.util.io.*;
++import mindustry.graphics.*;
+ import mindustry.gen.*;
+ import mindustry.type.*;
+ import mindustry.world.*;
+ import mindustry.world.meta.*;
++import mindustryX.features.*;
+ 
+ import static mindustry.Vars.*;
+ 
+@@ -88,6 +94,30 @@ public class Junction extends Block{
+             return to != null && to.team == team;
+         }
+ 
++        @Override
++        public void draw(){
++            super.draw();
++            if(RenderExt.hiddenItemTransparency > 0){
++                Draw.z(Layer.power + 0.1f);
++                Draw.color(Color.white, RenderExt.hiddenItemTransparency / 100f);
++                for(int dir = 0; dir < 4; dir++){
++                    float
++                    endx = x + Geometry.d4(dir).x * tilesize / 2f + Geometry.d4(dir + 1).x * tilesize / 4f,
++                    endy = y + Geometry.d4(dir).y * tilesize / 2f + Geometry.d4(dir + 1).y * tilesize / 4f,
++                    begx = x - Geometry.d4(dir).x * tilesize / 4f + Geometry.d4(dir + 1).x * tilesize / 4f,
++                    begy = y - Geometry.d4(dir).y * tilesize / 4f + Geometry.d4(dir + 1).y * tilesize / 4f;
++
++                    Item item;
++                    for(int i = 0; (item = buffer.getItem(dir, i)) != null; i++){
++                        float time = buffer.getTime(dir, i);
++                        float p = Math.min(((Time.time - time) * timeScale / speed), (float)(capacity - i) / capacity);
++                        Draw.rect(item.fullIcon, Mathf.lerp(begx, endx, p), Mathf.lerp(begy, endy, p), 4f, 4f);
++                    }
++                }
++            }
++        }
++
++
+         @Override
+         public byte version(){
+             return 1;

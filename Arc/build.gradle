@@ -1,0 +1,85 @@
+plugins {
+    id "de.undercouch.download" version "5.0.1"
+    id "com.badlogicgames.jnigen.jnigen-gradle" version "3.1.1" apply false
+}
+
+ext{
+    versions = [:]
+    libraries = [:]
+}
+
+versions.robovm = "2.3.24"
+versions.junit = "4.11"
+
+libraries.robovm = [
+    "com.mobidevelop.robovm:robovm-rt:${versions.robovm}",
+    "com.mobidevelop.robovm:robovm-objc:${versions.robovm}",
+    "com.mobidevelop.robovm:robovm-cocoatouch:${versions.robovm}"
+]
+
+libraries.junit = [
+    "junit:junit:${versions.junit}"
+]
+
+libraries.jnigen = [
+    "com.github.libgdx.gdx-jnigen:gdx-jnigen:$versions.jnigen"
+]
+
+allprojects{
+    apply plugin: 'maven-publish'
+    group = 'com.github.Anuken'
+    version = '1.0'
+
+    repositories{
+        mavenCentral()
+        google()
+        maven{ url = 'https://jitpack.io' }
+    }
+
+    ext.aproj = { String module ->
+        if(findProject(module) != null){
+            return project(module)
+        }else{
+            return project(":Arc" + module)
+        }
+    }
+
+    tasks.withType(JavaCompile){
+        java{
+            sourceCompatibility = 1.8
+            targetCompatibility = 1.8
+        }
+        options.compilerArgs.addAll(['--release', '8'])
+        options.encoding = "UTF-8"
+    }
+
+    tasks.withType(Javadoc){
+        options{
+            addStringOption('Xdoclint:none', '-quiet')
+            addStringOption('-release', '17')
+            encoding('UTF-8')
+        }
+    }
+}
+
+subprojects{
+    apply plugin: "java-library"
+
+    compileJava{
+        options.fork = true
+        options.incremental = true
+    }
+
+    java{
+        withJavadocJar()
+        withSourcesJar()
+    }
+
+    publishing{
+        publications{
+            maven(MavenPublication){
+                from components.java
+            }
+        }
+    }
+}

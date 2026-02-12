@@ -1,0 +1,90 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: way-zer <himc.wicp@gmail.com>
+Date: Sat, 4 May 2024 15:43:58 +0800
+Subject: [PATCH] H(UI): HudFragment
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+AuxiliaryTools, NewCoreItemsDisplay(新制核心资源显示), WaveInfoDisplay(波次信息显示), MarkType(标记功能)
+
+修复地图抖动
+---
+ .../mindustry/ui/fragments/HudFragment.java   | 35 +++++++++++++------
+ 1 file changed, 24 insertions(+), 11 deletions(-)
+
+diff --git a/core/src/mindustry/ui/fragments/HudFragment.java b/core/src/mindustry/ui/fragments/HudFragment.java
+index 3cf7581a3720140b16fa5793c01e71e4481ab616..396cd5df1b0e7e516f3c4fb4cba727c24e5490de 100644
+--- a/core/src/mindustry/ui/fragments/HudFragment.java
++++ b/core/src/mindustry/ui/fragments/HudFragment.java
+@@ -223,16 +223,21 @@ public class HudFragment{
+             t.name = "minimap/position";
+             t.visible(() -> Core.settings.getBool("minimap") && shown);
+             //minimap
+-            t.add(new Minimap()).name("minimap");
++            t.add(new Minimap()).name("minimap").right();
+             t.row();
+             //position
+-            t.label(() ->
+-                (Core.settings.getBool("position") ? player.tileX() + "," + player.tileY() + "\n" : "") +
+-                (Core.settings.getBool("mouseposition") ? "[lightgray]" + World.toTile(Core.input.mouseWorldX()) + "," + World.toTile(Core.input.mouseWorldY()) : ""))
+-            .visible(() -> Core.settings.getBool("position") || Core.settings.getBool("mouseposition"))
+-            .touchable(Touchable.disabled)
+-            .style(Styles.outlineLabel)
+-            .name("position");
++            t.table(tt -> {
++                tt.label(() ->
++                (Core.settings.getBool("position") ? "" + Iconc.players + player.tileX() + "," + player.tileY() + "\n" : "") +
++                (Core.settings.getBool("mouseposition") ? "[lightgray]" + "♐" + World.toTile(Core.input.mouseWorldX()) + "," + World.toTile(Core.input.mouseWorldY()) : ""))
++                .visible(() -> Core.settings.getBool("position") || Core.settings.getBool("mouseposition"))
++                .touchable(Touchable.disabled).style(Styles.outlineLabel).minWidth(120f);
++
++                tt.button("♐", Styles.cleart, MarkerType::toggleMarkHitterUI).size(iconMed).tooltip("进入标记模式");
++                tt.button("T", Styles.cleart, () -> ui.chatfrag.nextMode())
++                .checked(b -> ui.chatfrag.mode == ChatFragment.ChatMode.team).size(iconMed).tooltip("前缀添加/t");
++                tt.button("" + Iconc.zoom, Styles.cleart, MarkerType::lockOnLastMark).size(iconMed).tooltip("锁定上个标记点");
++            }).name("position");
+             t.top().right();
+         });
+ 
+@@ -420,12 +425,19 @@ public class HudFragment{
+                 IntFormat mem = new IntFormat("memory");
+                 IntFormat memnative = new IntFormat("memory2");
+ 
++                info.add(VarsX.version).color(Pal.accent).left();
++                info.row();
+                 info.label(() -> fps.get(Core.graphics.getFramesPerSecond())).left().style(Styles.outlineLabel).name("fps");
+                 info.row();
+                 info.label(() -> Strings.format("LG/DW/UI(ms) @/@/@", Time.nanosToMillis(DebugUtil.logicTime), Time.nanosToMillis(DebugUtil.rendererTime), Time.nanosToMillis(DebugUtil.uiTime)))
+                 .left().style(Styles.outlineLabel).name("cpuTime");
+                 info.row();
+ 
++                if (!android){
++                    info.label(() -> "缩放: " + String.format("%.2f", renderer.getScale())).left().style(Styles.outlineLabel);
++                    info.row();
++                }
++
+                 if(android){
+                     info.label(() -> memnative.get((int)(Core.app.getJavaHeap() / 1024 / 1024), (int)(Core.app.getNativeHeap() / 1024 / 1024))).left().style(Styles.outlineLabel).name("memory2");
+                 }else{
+@@ -435,8 +447,8 @@ public class HudFragment{
+ 
+                 info.label(() -> ping.get(netClient.getPing())).visible(net::client).left().style(Styles.outlineLabel).name("ping").row();
+                 info.label(() -> tps.get(state.serverTps == -1 ? 60 : state.serverTps)).visible(net::client).left().style(Styles.outlineLabel).name("tps").row();
+-
+-            }).top().left();
++            //MDTX: size 1 avoid affecting layout. And move up for mobile.
++            }).top().left().size(1).marginTop(mobile ? -dsize : 0);
+         });
+ 
+         //core info
+@@ -455,7 +467,8 @@ public class HudFragment{
+ 
+             t.table(c -> {
+                 //core items
+-                c.top().collapser(coreItems, () -> Core.settings.getBool("coreitems") && !mobile && shown).fillX().row();
++                //MDTX: replace coreItems with UIExt.coreItems, keep but invisible for compatibility.
++                c.top().collapser(coreItems, () -> false).fillX().visible(false).row();
+ 
+                 float notifDuration = 240f;
+                 float[] coreAttackTime = {0};

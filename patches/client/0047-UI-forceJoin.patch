@@ -1,0 +1,74 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: way-zer <himc.wicp@gmail.com>
+Date: Thu, 25 Jul 2024 12:32:29 +0800
+Subject: [PATCH] =?UTF-8?q?UI:=20forceJoin=20=E5=85=81=E8=AE=B8=E5=BC=BA?=
+ =?UTF-8?q?=E5=88=B6=E5=8A=A0=E5=85=A5=E7=89=88=E6=9C=AC=E4=B8=8D=E5=8C=B9?=
+ =?UTF-8?q?=E9=85=8D=E7=9A=84=E6=9C=8D=E5=8A=A1=E5=99=A8?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ core/src/mindustry/net/Packets.java           |  5 ++++-
+ core/src/mindustry/ui/dialogs/JoinDialog.java | 17 +++++++++++++++--
+ 2 files changed, 19 insertions(+), 3 deletions(-)
+
+diff --git a/core/src/mindustry/net/Packets.java b/core/src/mindustry/net/Packets.java
+index e766e594341959adfdaf7efef819806a7227f5c2..1b445b3ff268b1d626cf9ba84797560c04e9bb0a 100644
+--- a/core/src/mindustry/net/Packets.java
++++ b/core/src/mindustry/net/Packets.java
+@@ -6,6 +6,7 @@ import arc.util.io.*;
+ import arc.util.serialization.*;
+ import mindustry.core.*;
+ import mindustry.io.*;
++import mindustryX.*;
+ 
+ import java.util.zip.*;
+ 
+@@ -111,6 +112,8 @@ public class Packets{
+     }
+ 
+     public static class ConnectPacket extends Packet{
++        @MindustryXApi
++        public static int clientVersion;
+         public int version;
+         public String versionType;
+         public Seq<String> mods;
+@@ -120,7 +123,7 @@ public class Packets{
+ 
+         @Override
+         public void write(Writes buffer){
+-            buffer.i(Version.build);
++            buffer.i(clientVersion != 0 ? clientVersion : Version.build);
+             TypeIO.writeString(buffer, versionType);
+             TypeIO.writeString(buffer, name);
+             TypeIO.writeString(buffer, locale);
+diff --git a/core/src/mindustry/ui/dialogs/JoinDialog.java b/core/src/mindustry/ui/dialogs/JoinDialog.java
+index ffcb29c15f2e1ab996a36cda95b845d64028a9b3..cf2251dfa5bb7b927ee0301cad5d18a73161a934 100644
+--- a/core/src/mindustry/ui/dialogs/JoinDialog.java
++++ b/core/src/mindustry/ui/dialogs/JoinDialog.java
+@@ -636,9 +636,22 @@ public class JoinDialog extends BaseDialog{
+     }
+ 
+     void safeConnect(String ip, int port, int version){
++        ConnectPacket.clientVersion = Version.build;
+         if(version != Version.build && Version.build != -1 && version != -1){
+-            ui.showInfo("[scarlet]" + (version > Version.build ? KickReason.clientOutdated : KickReason.serverOutdated) + "\n[]" +
+-                Core.bundle.format("server.versions", Version.build, version));
++            new Dialog((version > Version.build ? KickReason.clientOutdated : KickReason.serverOutdated).toString()){{
++                title.setAlignment(Align.center);
++                cont.add(Core.bundle.format("server.versions", Version.build, version)).row();
++                cont.row();
++                cont.add("[gold]MDTX[]: 目标版本可能兼容，你可以选择伪装版本强制加入。\n如果出现[red]网络错误[]或其他问题，表示无法兼容。").row();
++                cont.pack();
++                buttons.button("强制加入", () -> {
++                    hide();
++                    ConnectPacket.clientVersion = version;
++                    connect(ip, port);
++                }).get().getLabel().setWrap(false);
++                buttons.button("@cancel", this::hide);
++                closeOnBack();
++            }}.show();
+         }else{
+             connect(ip, port);
+         }

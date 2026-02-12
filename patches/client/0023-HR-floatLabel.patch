@@ -1,0 +1,52 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: way-zer <himc.wicp@gmail.com>
+Date: Sat, 23 Mar 2024 21:28:15 +0800
+Subject: [PATCH] =?UTF-8?q?HR:=20floatLabel=20/=20=E9=A6=96=E9=A1=B5?=
+ =?UTF-8?q?=E6=B5=AE=E5=8A=A8=E6=A0=87=E8=AF=AD(=E9=87=8D=E7=BD=AE)?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ core/src/mindustry/ui/fragments/MenuFragment.java | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/core/src/mindustry/ui/fragments/MenuFragment.java b/core/src/mindustry/ui/fragments/MenuFragment.java
+index f72505326509e511e0aa8b6be652f0e59b77209d..6918efaf97843415b3002beabcc1a4a9e0ea8a02 100644
+--- a/core/src/mindustry/ui/fragments/MenuFragment.java
++++ b/core/src/mindustry/ui/fragments/MenuFragment.java
+@@ -19,6 +19,7 @@ import mindustry.game.EventType.*;
+ import mindustry.gen.*;
+ import mindustry.graphics.*;
+ import mindustry.ui.*;
++import mindustryX.features.ui.*;
+ 
+ import static mindustry.Vars.*;
+ import static mindustry.gen.Tex.*;
+@@ -30,6 +31,8 @@ public class MenuFragment{
+     private Seq<MenuButton> customButtons = new Seq<>();
+     public Seq<MenuButton> desktopButtons = null;
+ 
++    MenuFloatLabel floatLabel;
++
+     public void build(Group parent){
+         renderer = new MenuRenderer();
+ 
+@@ -38,6 +41,7 @@ public class MenuFragment{
+         group.visible(() -> !ui.editor.isShown());
+         parent.addChild(group);
+ 
++        parent.addChild(floatLabel = new MenuFloatLabel());
+         parent = group;
+ 
+         parent.fill((x, y, w, h) -> renderer.render());
+@@ -118,6 +122,9 @@ public class MenuFragment{
+                 fy -= Scl.scl(macNotchHeight);
+             }
+ 
++            floatLabel.setPosition(width / 2f + logow * 0.35f, fy - logoh / 2f - Scl.scl(2f) + logoh * 0.15f);
++            floatLabel.baseScale = logoh * 0.03f;
++
+             Draw.color();
+             Draw.rect(logo, fx, fy, logow, logoh);
+ 

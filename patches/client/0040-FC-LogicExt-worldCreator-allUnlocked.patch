@@ -1,0 +1,194 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: way-zer <himc.wicp@gmail.com>
+Date: Sun, 8 Sep 2024 15:43:00 +0800
+Subject: [PATCH] =?UTF-8?q?FC(LogicExt)=20worldCreator=20(=E5=88=9B?=
+ =?UTF-8?q?=E4=B8=96=E7=A5=9E)=20allUnlocked=20(=E8=A7=A3=E7=A6=81)?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ core/src/mindustry/ctype/UnlockableContent.java        | 5 +++--
+ core/src/mindustry/ui/dialogs/DatabaseDialog.java      | 9 +++++++--
+ core/src/mindustry/ui/fragments/PlacementFragment.java | 9 ++++++++-
+ core/src/mindustry/world/Block.java                    | 4 ++--
+ core/src/mindustry/world/Build.java                    | 6 ++++++
+ core/src/mindustry/world/blocks/ItemSelection.java     | 3 ++-
+ 6 files changed, 28 insertions(+), 8 deletions(-)
+
+diff --git a/core/src/mindustry/ctype/UnlockableContent.java b/core/src/mindustry/ctype/UnlockableContent.java
+index 8f3a4ccca9d09e8d2b4a6d547815db57c24a9d18..8db57d81cd1e78e428eca10f8bcec437450d27b0 100644
+--- a/core/src/mindustry/ctype/UnlockableContent.java
++++ b/core/src/mindustry/ctype/UnlockableContent.java
+@@ -18,6 +18,7 @@ import mindustry.mod.*;
+ import mindustry.type.*;
+ import mindustry.ui.*;
+ import mindustry.world.meta.*;
++import mindustryX.features.*;
+ 
+ import static mindustry.Vars.*;
+ 
+@@ -258,7 +259,7 @@ public abstract class UnlockableContent extends MappableContent{
+     }
+ 
+     public boolean unlockedNowHost(){
+-        return !state.isCampaign() || unlockedHost();
++        return mindustryX.VarsX.allUnlocked.get() || !state.isCampaign() || unlockedHost();
+     }
+ 
+     /** @return in multiplayer, whether this is unlocked for the host player, otherwise, whether it is unlocked for the local player (same as unlocked()) */
+@@ -270,7 +271,7 @@ public abstract class UnlockableContent extends MappableContent{
+ 
+     /** @return whether this content is unlocked, or the player is in a custom (non-campaign) game. */
+     public boolean unlockedNow(){
+-        return unlocked() || !state.isCampaign();
++        return mindustryX.VarsX.allUnlocked.get() || unlocked() || !state.isCampaign();
+     }
+ 
+     public boolean unlocked(){
+diff --git a/core/src/mindustry/ui/dialogs/DatabaseDialog.java b/core/src/mindustry/ui/dialogs/DatabaseDialog.java
+index dfc3a053a0f323ccaa15a0ffc7a77d658f6ea3c6..3f87fb047e9e1b06c579058f6e36528e1826e2a8 100644
+--- a/core/src/mindustry/ui/dialogs/DatabaseDialog.java
++++ b/core/src/mindustry/ui/dialogs/DatabaseDialog.java
+@@ -50,6 +50,11 @@ public class DatabaseDialog extends BaseDialog{
+         });
+         onResize(this::rebuild);
+ 
++        buttons.button("解禁", Styles.togglet, () -> {
++            mindustryX.VarsX.allUnlocked.toggle();
++            rebuild();
++        }).checked((b) -> mindustryX.VarsX.allUnlocked.get());
++
+         all.margin(20).marginTop(0f).marginRight(30f);
+ 
+         cont.top();
+@@ -127,7 +132,7 @@ public class DatabaseDialog extends BaseDialog{
+             for(int j = 0; j < categoryContents.size; j++){
+                 String tagName = categoryContents.orderedKeys().get(j);
+                 Seq<UnlockableContent> array = categoryContents.get(tagName).select(u ->
+-                !u.isHidden() && !u.hideDatabase &&
++                (mindustryX.VarsX.allUnlocked.getValue() || !u.isHidden() && !u.hideDatabase) &&
+                 (tab == Planets.sun || u.allDatabaseTabs || u.databaseTabs.contains(tab)) &&
+                 (text.isEmpty() || u.localizedName.toLowerCase().contains(text))).as();
+                 if(array.isEmpty()) continue;
+@@ -234,6 +239,6 @@ public class DatabaseDialog extends BaseDialog{
+     }
+ 
+     boolean unlocked(UnlockableContent content){
+-        return (!Vars.state.isCampaign() && !Vars.state.isMenu()) || content.unlocked();
++        return mindustryX.VarsX.allUnlocked.get() || (!Vars.state.isCampaign() && !Vars.state.isMenu()) || content.unlocked();
+     }
+ }
+diff --git a/core/src/mindustry/ui/fragments/PlacementFragment.java b/core/src/mindustry/ui/fragments/PlacementFragment.java
+index 60cedfaecdb8a85dcfccc30ca090aa48e3463350..01ba50f19dcae39176f8dde2be5391777131826c 100644
+--- a/core/src/mindustry/ui/fragments/PlacementFragment.java
++++ b/core/src/mindustry/ui/fragments/PlacementFragment.java
+@@ -26,8 +26,10 @@ import mindustry.input.*;
+ import mindustry.type.*;
+ import mindustry.ui.*;
+ import mindustry.world.*;
++import mindustry.world.blocks.*;
+ import mindustry.world.blocks.ConstructBlock.*;
+ import mindustry.world.meta.*;
++import mindustryX.features.*;
+ 
+ import static mindustry.Vars.*;
+ 
+@@ -109,6 +111,10 @@ public class PlacementFragment{
+                 if(nextFlowBuild.flowItems() != null) nextFlowBuild.flowItems().updateFlow();
+                 if(nextFlowBuild.liquids != null) nextFlowBuild.liquids.updateFlow();
+             }
++
++            if(mindustryX.VarsX.allUnlocked.changed("placement")){
++                rebuild();
++            }
+         });
+     }
+ 
+@@ -289,6 +295,7 @@ public class PlacementFragment{
+ 
+                     for(Block block : getUnlockedByCategory(currentCategory)){
+                         if(!unlocked(block)) continue;
++                        if (block == Blocks.air || block instanceof ConstructBlock) continue;
+                         if(index++ % rowWidth == 0){
+                             blockTable.row();
+                         }
+@@ -745,7 +752,7 @@ public class PlacementFragment{
+     }
+ 
+     boolean unlocked(Block block){
+-        return block.unlockedNowHost() && block.placeablePlayer && block.environmentBuildable() &&
++        return mindustryX.VarsX.allUnlocked.get() || block.unlockedNowHost() && block.placeablePlayer && block.environmentBuildable() &&
+             block.supportsEnv(state.rules.env);
+     }
+ 
+diff --git a/core/src/mindustry/world/Block.java b/core/src/mindustry/world/Block.java
+index 0cac3aaa3b68eb3d547da71ad520df9dddb926ea..38161b0a925e15dbd218567f47875f7f7be3d623 100644
+--- a/core/src/mindustry/world/Block.java
++++ b/core/src/mindustry/world/Block.java
+@@ -955,11 +955,11 @@ public class Block extends UnlockableContent implements Senseable{
+     }
+ 
+     public boolean isVisible(){
+-        return !isHidden() && (state.rules.editor || (!state.rules.hideBannedBlocks || !isBanned()));
++        return mindustryX.VarsX.allUnlocked.get() || !isHidden() && (state.rules.editor || (!state.rules.hideBannedBlocks || !isBanned()));
+     }
+ 
+     public boolean isPlaceable(){
+-        return isVisible() && (!isBanned() || state.rules.editor) && supportsEnv(state.rules.env);
++        return LogicExt.worldCreator || isVisible() && (!isBanned() || state.rules.editor) && supportsEnv(state.rules.env);
+     }
+ 
+     @Override
+diff --git a/core/src/mindustry/world/Build.java b/core/src/mindustry/world/Build.java
+index 29325166665bef59573d5bb5fbbbc0ab6cfc39ad..f0fc4b4ebb7f79d29daf18ab7c304dde89eb1fce 100644
+--- a/core/src/mindustry/world/Build.java
++++ b/core/src/mindustry/world/Build.java
+@@ -15,6 +15,7 @@ import mindustry.gen.*;
+ import mindustry.world.blocks.*;
+ import mindustry.world.blocks.ConstructBlock.*;
+ import mindustry.world.blocks.storage.CoreBlock.*;
++import mindustryX.features.*;
+ 
+ import static mindustry.Vars.*;
+ 
+@@ -180,6 +181,10 @@ public class Build{
+ 
+     /** @return whether a tile can be placed at this location by this team. Ignores units at this location. */
+     public static boolean validPlaceIgnoreUnits(Block type, Team team, int x, int y, int rotation, boolean checkVisible, boolean checkCoreRadius){
++        if (LogicExt.worldCreator) {
++            Tile tile = world.tile(x, y);
++            return tile != null;
++        }
+         //the wave team can build whatever they want as long as it's visible - banned blocks are not applicable
+         if(type == null || (!state.rules.editor && (checkVisible && (!type.environmentBuildable() || (!type.isPlaceable() && !(state.rules.waves && team == state.rules.waveTeam && type.isVisible())))))){
+             return false;
+@@ -312,6 +317,7 @@ public class Build{
+     /** @return whether the tile at this position is breakable by this team */
+     public static boolean validBreak(Team team, int x, int y){
+         Tile tile = world.tile(x, y);
++        if(LogicExt.worldCreator && tile.block() != Blocks.air) return true;
+         return tile != null && tile.block() != Blocks.air && (tile.block().canBreak(tile) && (tile.breakable() || state.rules.allowEnvironmentDeconstruct)) && tile.interactable(team);
+     }
+ }
+diff --git a/core/src/mindustry/world/blocks/ItemSelection.java b/core/src/mindustry/world/blocks/ItemSelection.java
+index eafa13692bc52e2b49722d836e39286caeced785..1724b4dc97b7b8a12d568091a31658c8d991b8e9 100644
+--- a/core/src/mindustry/world/blocks/ItemSelection.java
++++ b/core/src/mindustry/world/blocks/ItemSelection.java
+@@ -12,6 +12,7 @@ import mindustry.ctype.*;
+ import mindustry.gen.*;
+ import mindustry.ui.*;
+ import mindustry.world.*;
++import mindustryX.features.*;
+ 
+ import static mindustry.Vars.*;
+ 
+@@ -66,7 +67,7 @@ public class ItemSelection{
+ 
+             Seq<T> list = items.select(u -> (text.isEmpty() || u.localizedName.toLowerCase().contains(text.toLowerCase())));
+             for(T item : list){
+-                if(!item.unlockedNow() || !item.isOnPlanet(state.getPlanet()) || item.isHidden()) continue;
++                if(!mindustryX.VarsX.allUnlocked.get() && (!item.unlockedNow() || !item.isOnPlanet(state.getPlanet()) || item.isHidden())) continue;
+ 
+                 ImageButton button = cont.button(Tex.whiteui, Styles.clearNoneTogglei, Mathf.clamp(item.selectionSize, 0f, 40f), () -> {
+                     if(closeSelect) control.input.config.hideConfig();

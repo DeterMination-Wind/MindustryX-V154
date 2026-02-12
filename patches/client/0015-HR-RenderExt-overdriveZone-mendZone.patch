@@ -1,0 +1,117 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: way-zer <himc.wicp@gmail.com>
+Date: Sat, 17 Feb 2024 14:15:29 +0800
+Subject: [PATCH] HR(RenderExt) overdriveZone mendZone
+
+---
+ core/src/mindustry/core/Renderer.java         |  5 ++++
+ core/src/mindustry/graphics/Layer.java        |  3 +++
+ .../world/blocks/defense/MendProjector.java   |  8 +++++++
+ .../blocks/defense/OverdriveProjector.java    | 24 +++++++++++++++++++
+ 4 files changed, 40 insertions(+)
+
+diff --git a/core/src/mindustry/core/Renderer.java b/core/src/mindustry/core/Renderer.java
+index 89778dccade18298c268693f6fb0f462bdcc7237..3c23eebbc063bf002e087cb07cfc4191137ea829 100644
+--- a/core/src/mindustry/core/Renderer.java
++++ b/core/src/mindustry/core/Renderer.java
+@@ -374,6 +374,11 @@ public class Renderer implements ApplicationListener{
+                 effectBuffer.blit(Shaders.shield);
+             });
+ 
++            Draw.drawRange(Layer.overdrive, 1f, () -> effectBuffer.begin(Color.clear), () -> {
++                effectBuffer.end();
++                effectBuffer.blit(Shaders.shield);
++            });
++
+             Draw.drawRange(Layer.buildBeam, 1f, () -> effectBuffer.begin(Color.clear), () -> {
+                 effectBuffer.end();
+                 effectBuffer.blit(Shaders.buildBeam);
+diff --git a/core/src/mindustry/graphics/Layer.java b/core/src/mindustry/graphics/Layer.java
+index 7d8d9f343acb410ba680aab1c1f6a2be9dbbf3a4..48e80224bdcbaea0476d4be204eef7670b14af87 100644
+--- a/core/src/mindustry/graphics/Layer.java
++++ b/core/src/mindustry/graphics/Layer.java
+@@ -86,6 +86,9 @@ public class Layer{
+     //shield effects
+     shields = 125,
+ 
++    //shield effects
++    overdrive = 127,
++
+     //weather effects, e.g. rain and snow
+     weather = 130,
+ 
+diff --git a/core/src/mindustry/world/blocks/defense/MendProjector.java b/core/src/mindustry/world/blocks/defense/MendProjector.java
+index 74c0e2aa39b29241538f9deb3f1ecbf717852d33..f1ce6b0ba47e9d3949e344db0ed784d4b4d511d6 100644
+--- a/core/src/mindustry/world/blocks/defense/MendProjector.java
++++ b/core/src/mindustry/world/blocks/defense/MendProjector.java
+@@ -15,6 +15,7 @@ import mindustry.logic.*;
+ import mindustry.world.*;
+ import mindustry.world.consumers.*;
+ import mindustry.world.meta.*;
++import mindustryX.features.*;
+ 
+ import static mindustry.Vars.*;
+ 
+@@ -140,6 +141,13 @@ public class MendProjector extends Block{
+         public void draw(){
+             super.draw();
+ 
++            float realRange = range + phaseHeat * phaseRangeBoost;
++            if(status() == BlockStatus.active && RenderExt.mendZoneTransparency > 0.02f){
++                var c = Tmp.c1.set(baseColor);
++                if(phaseHeat > 0) c.lerp(phaseColor, 0.5f);
++                Draw.color(c, RenderExt.mendZoneTransparency);
++                Lines.dashCircle(x, y, realRange);
++            }
+             float f = 1f - (Time.time / 100f) % 1f;
+ 
+             Draw.color(baseColor, phaseColor, phaseHeat);
+diff --git a/core/src/mindustry/world/blocks/defense/OverdriveProjector.java b/core/src/mindustry/world/blocks/defense/OverdriveProjector.java
+index 17c606bd86ca5222691a366f0691a72faea4acf8..c2a1f10f2fe32c093cb0142a7f1d93dabadb4e2f 100644
+--- a/core/src/mindustry/world/blocks/defense/OverdriveProjector.java
++++ b/core/src/mindustry/world/blocks/defense/OverdriveProjector.java
+@@ -15,6 +15,7 @@ import mindustry.ui.*;
+ import mindustry.world.*;
+ import mindustry.world.consumers.*;
+ import mindustry.world.meta.*;
++import mindustryX.features.*;
+ 
+ import static mindustry.Vars.*;
+ 
+@@ -45,6 +46,12 @@ public class OverdriveProjector extends Block{
+         ambientSoundVolume = 0.13f;
+     }
+ 
++    @Override
++    public void init(){
++        updateClipRadius(range + phaseRangeBoost + 3f);
++        super.init();
++    }
++
+     @Override
+     public boolean outputsItems(){
+         return false;
+@@ -137,6 +144,23 @@ public class OverdriveProjector extends Block{
+         public void draw(){
+             super.draw();
+ 
++            float realRange = range + phaseHeat * phaseRangeBoost;
++            float pro_Transparency = RenderExt.overdriveZoneTransparency;
++            if(realBoost() > 1 && pro_Transparency > 0){
++                if(renderer.animateShields){
++                    Draw.z(Layer.overdrive);
++                    Draw.color(phaseHeat > 0.2 ? phaseColor : baseColor);
++                    Fill.circle(x, y, realRange);
++                    Draw.color();
++                    Draw.z(Layer.overdrive - 0.3f);
++                }else{
++                    Draw.color(phaseHeat > 0.2 ? phaseColor : baseColor, pro_Transparency);
++                    Lines.circle(x, y, realRange);
++                    Draw.alpha(pro_Transparency * 0.1f);
++                    Fill.circle(x, y, realRange);
++                }
++            }
++
+             float f = 1f - (Time.time / 100f) % 1f;
+ 
+             Draw.color(baseColor, phaseColor, phaseHeat);

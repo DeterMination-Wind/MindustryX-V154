@@ -1,0 +1,25 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: way-zer <himc.wicp@gmail.com>
+Date: Wed, 2 Feb 2022 17:42:16 +0800
+Subject: [PATCH] OS: update TypeIO.writeRequest
+
+---
+ core/src/mindustry/io/TypeIO.java | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/core/src/mindustry/io/TypeIO.java b/core/src/mindustry/io/TypeIO.java
+index c0b1b753d178f848723b30c66276e41e7110d962..2664dbf6c33792dbfb65261486a3c9983c7776d0 100644
+--- a/core/src/mindustry/io/TypeIO.java
++++ b/core/src/mindustry/io/TypeIO.java
+@@ -456,8 +456,9 @@ public class TypeIO{
+         if(!plan.breaking){
+             write.s(plan.block.id);
+             write.b((byte)plan.rotation);
+-            write.b(1); //always has config
+-            writeObject(write, plan.config);
++            boolean writePlan = !headless || !net.server();
++            write.b(writePlan ? 1 : 0); //always has config
++            writeObject(write, writePlan ? plan.config : null);
+         }
+     }
+ 

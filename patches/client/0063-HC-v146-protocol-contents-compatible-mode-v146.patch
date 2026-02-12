@@ -1,0 +1,303 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: way-zer <himc.wicp@gmail.com>
+Date: Fri, 29 Nov 2024 20:16:58 +0800
+Subject: [PATCH] =?UTF-8?q?HC:=20v146=20protocol&contents=20compatible=20m?=
+ =?UTF-8?q?ode=20(=E5=85=81=E8=AE=B8=E8=B7=A8=E7=89=88=E6=9C=AC=E5=8A=A0?=
+ =?UTF-8?q?=E5=85=A5v146=E6=9C=8D=E5=8A=A1=E5=99=A8)?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ core/src/mindustry/core/ContentLoader.java    | 17 ++++++++++
+ core/src/mindustry/core/NetClient.java        |  2 ++
+ core/src/mindustry/io/TypeIO.java             | 12 +++++--
+ core/src/mindustry/net/Net.java               | 34 ++++++++++++++++---
+ core/src/mindustry/net/NetworkIO.java         | 32 +++++++++++++----
+ core/src/mindustry/net/Packets.java           |  2 +-
+ core/src/mindustry/ui/dialogs/JoinDialog.java |  2 +-
+ 7 files changed, 85 insertions(+), 16 deletions(-)
+
+diff --git a/core/src/mindustry/core/ContentLoader.java b/core/src/mindustry/core/ContentLoader.java
+index b7415388c7427601ff9ec6c5bf85f5ae9cffa2ea..df7a39ed93ec5049d2ce6c932cea4a1c7c37ed2e 100644
+--- a/core/src/mindustry/core/ContentLoader.java
++++ b/core/src/mindustry/core/ContentLoader.java
+@@ -33,6 +33,8 @@ public class ContentLoader{
+     private @Nullable Content lastAdded;
+     private ObjectSet<Cons<Content>> initialization = new ObjectSet<>();
+ 
++    private ObjectIntMap<MappableContent> temporaryMapperR = new ObjectIntMap<>();
++
+     public ContentLoader(){
+         for(ContentType type : ContentType.all){
+             contentMap[type.ordinal()] = new Seq<>();
+@@ -208,6 +210,21 @@ public class ContentLoader{
+ 
+     public void setTemporaryMapper(MappableContent[][] temporaryMapper){
+         this.temporaryMapper = temporaryMapper;
++        var mapperR = temporaryMapperR;
++        mapperR.clear();
++        if(temporaryMapper == null) return;
++        for(var arr : temporaryMapper){
++            if(arr == null) continue;
++            for(int i = 0; i < arr.length; i++){
++                if(arr[i] == null) continue;
++                mapperR.put(arr[i], i);
++            }
++        }
++    }
++
++    @mindustryX.MindustryXApi
++    public int getTemporaryMapperId(MappableContent content){
++        return temporaryMapperR.get(content, 0);
+     }
+ 
+     /** @return the last registered content with the specified name. Note that the content loader makes no attempt to resolve name conflicts. This method can be unreliable. */
+diff --git a/core/src/mindustry/core/NetClient.java b/core/src/mindustry/core/NetClient.java
+index 61ef7a6ae1a82d078d4eb1d91a06215d5b191a57..4ff530335dc094b433063f06b466cc754efd8e71 100644
+--- a/core/src/mindustry/core/NetClient.java
++++ b/core/src/mindustry/core/NetClient.java
+@@ -522,6 +522,8 @@ public class NetClient implements ApplicationListener{
+ 
+     @Remote(variants = Variant.both, priority = PacketPriority.low, unreliable = true)
+     public static void blockSnapshot(short amount, byte[] data){
++        //MDTX: As `Block.id` and `Building.version()` is different, snapshot can't read correctly
++        if(LogicExt.contentsCompatibleMode) return;
+         try{
+             netClient.byteStream.setBytes(data);
+             DataInputStream input = netClient.dataStream;
+diff --git a/core/src/mindustry/io/TypeIO.java b/core/src/mindustry/io/TypeIO.java
+index 9dce3a88534d6f6f609c0c26b98287b84902f5db..ff9e1318add68c7c6c4bd16d4b859baea11b9580 100644
+--- a/core/src/mindustry/io/TypeIO.java
++++ b/core/src/mindustry/io/TypeIO.java
+@@ -26,6 +26,7 @@ import mindustry.type.*;
+ import mindustry.world.*;
+ import mindustry.world.blocks.*;
+ import mindustry.world.blocks.payloads.*;
++import mindustryX.features.*;
+ 
+ import java.io.*;
+ import java.nio.*;
+@@ -55,7 +56,10 @@ public class TypeIO{
+         }else if(object instanceof Content map){
+             write.b((byte)5);
+             write.b((byte)map.getContentType().ordinal());
+-            write.s(map.id);
++            if(LogicExt.contentsCompatibleMode && map instanceof Block b)
++                writeBlock(write, b);
++            else
++                write.s(map.id);
+         }else if(object instanceof IntSeq arr){
+             write.b((byte)6);
+             write.s((short)arr.size);
+@@ -392,6 +396,10 @@ public class TypeIO{
+     }
+ 
+     public static void writeBlock(Writes write, Block block){
++        if(LogicExt.contentsCompatibleMode){
++            write.s(content.getTemporaryMapperId(block));
++            return;
++        }
+         write.s(block.id);
+     }
+ 
+@@ -454,7 +462,7 @@ public class TypeIO{
+         write.b(plan.breaking ? (byte)1 : 0);
+         write.i(Point2.pack(plan.x, plan.y));
+         if(!plan.breaking){
+-            write.s(plan.block.id);
++            writeBlock(write, plan.block);
+             write.b((byte)plan.rotation);
+             boolean writePlan = !headless || !net.server();
+             write.b(writePlan ? 1 : 0); //always has config
+diff --git a/core/src/mindustry/net/Net.java b/core/src/mindustry/net/Net.java
+index 332f2e11d8575e0b70f3589e685c4beb5c7a9049..cb76e9e2a90af2d54aa5668def238828a236c876 100644
+--- a/core/src/mindustry/net/Net.java
++++ b/core/src/mindustry/net/Net.java
+@@ -1,6 +1,7 @@
+ package mindustry.net;
+ 
+ import arc.*;
++import arc.files.*;
+ import arc.func.*;
+ import arc.net.*;
+ import arc.net.Server.*;
+@@ -10,6 +11,7 @@ import mindustry.game.EventType.*;
+ import mindustry.gen.*;
+ import mindustry.net.Packets.*;
+ import mindustry.net.Streamable.*;
++import mindustryX.*;
+ import mindustryX.events.*;
+ import mindustryX.features.*;
+ import net.jpountz.lz4.*;
+@@ -17,9 +19,8 @@ import net.jpountz.lz4.*;
+ import java.io.*;
+ import java.nio.*;
+ import java.nio.channels.*;
+-import java.util.concurrent.*;
+ 
+-import static arc.util.Log.*;
++import static arc.util.Log.debug;
+ import static mindustry.Vars.*;
+ 
+ @SuppressWarnings("unchecked")
+@@ -50,6 +51,14 @@ public class Net{
+         Call.registerPackets();
+     }
+ 
++    private static final ProtocolMap v146ProtocolMap = new ProtocolMap("v146");
++    private static final ProtocolMap v153ProtocolMap = new ProtocolMap("v153");
++
++    @MindustryXApi
++    public static Seq<Class<? extends Packet>> allPacketClasses(){
++        return packetClasses;
++    }
++
+     /** Registers a new packet type for serialization. */
+     public static <T extends Packet> void registerPacket(Prov<T> cons){
+         packetProvs.add(cons);
+@@ -59,13 +68,21 @@ public class Net{
+     }
+ 
+     public static byte getPacketId(Packet packet){
+-        int id = packetToId.get(packet.getClass(), -1);
++        int id = LogicExt.v146Mode ? v146ProtocolMap.getId(packet) :
++        LogicExt.mockProtocol <= 153 ? v153ProtocolMap.getId(packet) :
++        packetToId.get(packet.getClass(), -1);
+         if(id == -1) throw new ArcRuntimeException("Unknown packet type: " + packet.getClass());
+         return (byte)id;
+     }
+ 
+     public static <T extends Packet> T newPacket(byte id){
+-        return ((Prov<T>)packetProvs.get(id & 0xff)).get();
++        int id2 = id & 0xff;
++        if(LogicExt.v146Mode){
++            id2 = v146ProtocolMap.mapId(id2);
++        }else if(LogicExt.mockProtocol <= 153){
++            id2 = v153ProtocolMap.mapId(id2);
++        }
++        return ((Prov<T>)packetProvs.get(id2)).get();
+     }
+ 
+     public Net(NetProvider provider){
+@@ -199,6 +216,7 @@ public class Net{
+     }
+ 
+     public void disconnect(){
++        content.setTemporaryMapper(null);
+         if(active && !server){
+             Log.info("Disconnecting.");
+         }
+@@ -268,7 +286,13 @@ public class Net{
+      * Call to handle a packet being received for the client.
+      */
+     public void handleClientReceived(Packet object){
+-        object.handled();
++        try{
++            object.handled();
++        }catch(RuntimeException e){
++            if(LogicExt.contentsCompatibleMode && e.getCause() instanceof EOFException){
++                //ignore
++            }else throw e;
++        }
+ 
+         if(object instanceof StreamBegin b){
+             streams.put(b.id, currentStream = new StreamBuilder(b));
+diff --git a/core/src/mindustry/net/NetworkIO.java b/core/src/mindustry/net/NetworkIO.java
+index 6ff7fc477c68e159e5c65bce0a015ec1690b3692..1b8b11dcd257d0006493dee7de7a7b2ef7224dc3 100644
+--- a/core/src/mindustry/net/NetworkIO.java
++++ b/core/src/mindustry/net/NetworkIO.java
+@@ -4,6 +4,7 @@ import arc.*;
+ import arc.util.*;
+ import arc.util.io.*;
+ import mindustry.*;
++import mindustry.content.*;
+ import mindustry.core.*;
+ import mindustry.ctype.*;
+ import mindustry.game.*;
+@@ -13,6 +14,7 @@ import mindustry.logic.*;
+ import mindustry.maps.Map;
+ import mindustry.net.Administration.*;
+ import mindustry.type.*;
++import mindustryX.features.*;
+ 
+ import java.io.*;
+ import java.nio.*;
+@@ -61,12 +63,19 @@ public class NetworkIO{
+         }
+     }
+ 
++    @SuppressWarnings("deprecation")
+     public static void loadWorld(InputStream is){
+ 
+         try(DataInputStream stream = new DataInputStream(is)){
+             Time.clear();
+             state.rules = JsonIO.read(Rules.class, stream.readUTF());
+-            state.mapLocales = JsonIO.read(MapLocales.class, stream.readUTF());
++            if(LogicExt.v146Mode){
++                //noinspection deprecation
++                if(!state.rules.hiddenBuildItems.contains(Items.beryllium) && !state.rules.hiddenBuildItems.contains(Items.copper)){
++                    state.rules.planet = Planets.sun;
++                }
++            }
++            if(!LogicExt.v146Mode) state.mapLocales = JsonIO.read(MapLocales.class, stream.readUTF());
+             state.map = new Map(SaveIO.getSaveWriter().readStringMap(stream));
+ 
+             state.wave = stream.readInt();
+@@ -84,15 +93,24 @@ public class NetworkIO{
+             player.id = id;
+             player.add();
+ 
+-            SaveIO.getSaveWriter().readContentHeader(stream);
+-            SaveIO.getSaveWriter().readContentPatches(stream);
+-            SaveIO.getSaveWriter().readMap(stream, world.context);
+-            SaveIO.getSaveWriter().readTeamBlocks(stream);
+-            SaveIO.getSaveWriter().readMarkers(stream);
+-            SaveIO.getSaveWriter().readCustomChunks(stream);
++            var saveWriter = SaveIO.getSaveWriter();
++            //MDTX: Use ShortChunkSave version
++            if(LogicExt.mockProtocol < 152){
++                saveWriter = SaveIO.getSaveWriter(9);
++            }
++            saveWriter.readContentHeader(stream);
++            //MDTX: Use ShortChunkSave version
++            if(LogicExt.mockProtocol >= 153)
++                saveWriter.readContentPatches(stream);
++            saveWriter.readMap(stream, world.context);
++            saveWriter.readTeamBlocks(stream);
++            if(!LogicExt.v146Mode)
++                saveWriter.readMarkers(stream);
++            saveWriter.readCustomChunks(stream);
+         }catch(IOException e){
+             throw new RuntimeException(e);
+         }finally{
++            if(!LogicExt.contentsCompatibleMode)
+             content.setTemporaryMapper(null);
+         }
+     }
+diff --git a/core/src/mindustry/net/Packets.java b/core/src/mindustry/net/Packets.java
+index 1b445b3ff268b1d626cf9ba84797560c04e9bb0a..8f91b6abf01af158cb8b2c81d10b55b3887b006d 100644
+--- a/core/src/mindustry/net/Packets.java
++++ b/core/src/mindustry/net/Packets.java
+@@ -124,7 +124,7 @@ public class Packets{
+         @Override
+         public void write(Writes buffer){
+             buffer.i(clientVersion != 0 ? clientVersion : Version.build);
+-            TypeIO.writeString(buffer, versionType);
++            TypeIO.writeString(buffer, clientVersion < 1000 ? "official" : versionType);
+             TypeIO.writeString(buffer, name);
+             TypeIO.writeString(buffer, locale);
+             TypeIO.writeString(buffer, usid);
+diff --git a/core/src/mindustry/ui/dialogs/JoinDialog.java b/core/src/mindustry/ui/dialogs/JoinDialog.java
+index cf2251dfa5bb7b927ee0301cad5d18a73161a934..4b988a8ef9783fda17807c1368eeb11d64418035 100644
+--- a/core/src/mindustry/ui/dialogs/JoinDialog.java
++++ b/core/src/mindustry/ui/dialogs/JoinDialog.java
+@@ -642,7 +642,7 @@ public class JoinDialog extends BaseDialog{
+                 title.setAlignment(Align.center);
+                 cont.add(Core.bundle.format("server.versions", Version.build, version)).row();
+                 cont.row();
+-                cont.add("[gold]MDTX[]: 目标版本可能兼容，你可以选择伪装版本强制加入。\n如果出现[red]网络错误[]或其他问题，表示无法兼容。").row();
++                cont.add("@forceJoin.tips").row();
+                 cont.pack();
+                 buttons.button("强制加入", () -> {
+                     hide();

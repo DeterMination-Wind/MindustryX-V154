@@ -1,0 +1,67 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: way-zer <himc.wicp@gmail.com>
+Date: Tue, 9 Apr 2024 22:28:36 +0800
+Subject: [PATCH] =?UTF-8?q?HR(RenderExt)=20logicDisplayNoBorder(=E6=98=BE?=
+ =?UTF-8?q?=E7=A4=BA=E5=B1=8F=E6=97=A0=E8=BE=B9=E6=A1=86),arcDrillMode(?=
+ =?UTF-8?q?=E8=BD=AC=E5=A4=B4=E6=98=BE=E7=A4=BA=E7=89=A9=E5=93=81)?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ core/src/mindustry/world/blocks/logic/LogicDisplay.java | 7 ++++++-
+ core/src/mindustry/world/blocks/production/Drill.java   | 2 ++
+ 2 files changed, 8 insertions(+), 1 deletion(-)
+
+diff --git a/core/src/mindustry/world/blocks/logic/LogicDisplay.java b/core/src/mindustry/world/blocks/logic/LogicDisplay.java
+index 393378f44078e3d914eec8246f2302249dcc1d0b..49efb020afda2f66b59825119b3359ad2f0c9273 100644
+--- a/core/src/mindustry/world/blocks/logic/LogicDisplay.java
++++ b/core/src/mindustry/world/blocks/logic/LogicDisplay.java
+@@ -17,6 +17,7 @@ import mindustry.logic.*;
+ import mindustry.ui.*;
+ import mindustry.world.*;
+ import mindustry.world.meta.*;
++import mindustryX.features.*;
+ 
+ public class LogicDisplay extends Block{
+     public static final byte
+@@ -84,7 +85,7 @@ public class LogicDisplay extends Block{
+ 
+         @Override
+         public void draw(){
+-            super.draw();
++            if(!RenderExt.logicDisplayNoBorder) super.draw();
+ 
+             //don't even bother processing anything when displays are off.
+             if(!Vars.renderer.drawDisplays) return;
+@@ -103,6 +104,10 @@ public class LogicDisplay extends Block{
+             Draw.blend(Blending.disabled);
+             Draw.draw(Draw.z(), () -> {
+                 if(buffer != null){
++                    if(RenderExt.logicDisplayNoBorder){
++                        Draw.rect(Draw.wrap(buffer.getTexture()), x, y, (buffer.getWidth() + 16) * Draw.scl, -(buffer.getHeight() + 16) * Draw.scl);
++                        return;
++                    }
+                     Draw.rect(Draw.wrap(buffer.getTexture()), x, y, buffer.getWidth() * scaleFactor * Draw.scl, -buffer.getHeight() * scaleFactor * Draw.scl);
+                 }
+             });
+diff --git a/core/src/mindustry/world/blocks/production/Drill.java b/core/src/mindustry/world/blocks/production/Drill.java
+index 8c00eb03c4ce89f63a06f64444aeb5b3fcba6a93..d2ff9c0ad19f3fc20f5e2b36d6bd4b77e60b4b95 100644
+--- a/core/src/mindustry/world/blocks/production/Drill.java
++++ b/core/src/mindustry/world/blocks/production/Drill.java
+@@ -21,6 +21,7 @@ import mindustry.world.*;
+ import mindustry.world.blocks.environment.*;
+ import mindustry.world.consumers.*;
+ import mindustry.world.meta.*;
++import mindustryX.features.*;
+ 
+ import static mindustry.Vars.*;
+ 
+@@ -260,6 +261,7 @@ public class Drill extends Block{
+ 
+         @Override
+         public void drawSelect(){
++            if(RenderExt.arcDrillMode) return;
+             drawItemSelection(dominantItem);
+         }
+ 

@@ -1,0 +1,79 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: way-zer <himc.wicp@gmail.com>
+Date: Tue, 26 Mar 2024 22:36:18 +0800
+Subject: [PATCH] HC: AutoUpdate
+
+---
+ core/src/mindustry/net/BeControl.java         | 10 +---------
+ .../mindustry/ui/fragments/MenuFragment.java  | 19 ++++---------------
+ 2 files changed, 5 insertions(+), 24 deletions(-)
+
+diff --git a/core/src/mindustry/net/BeControl.java b/core/src/mindustry/net/BeControl.java
+index 2b96a3f231a78f6edb51d9459a1cbbcdeaa6d68e..7172b63844e32b48537d1b53a4da7db633bb4998 100644
+--- a/core/src/mindustry/net/BeControl.java
++++ b/core/src/mindustry/net/BeControl.java
+@@ -35,19 +35,11 @@ public class BeControl{
+     }
+ 
+     public BeControl(){
+-        if(active()){
+-            Timer.schedule(() -> {
+-                if((Vars.clientLoaded || headless) && checkUpdates && !mobile){
+-                    checkUpdate(t -> {});
+-                }
+-            }, updateInterval, updateInterval);
+-        }
+-
+         if(OS.hasProp("becopy")){
+             try{
+                 Fi dest = Fi.get(OS.prop("becopy"));
+                 Fi self = Fi.get(BeControl.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath());
+-                
++
+                 for(Fi file : self.parent().findAll(f -> !f.equals(self))) file.delete();
+ 
+                 self.copyTo(dest);
+diff --git a/core/src/mindustry/ui/fragments/MenuFragment.java b/core/src/mindustry/ui/fragments/MenuFragment.java
+index 6918efaf97843415b3002beabcc1a4a9e0ea8a02..90c843267ba9c3c59413a658c9777198296514f5 100644
+--- a/core/src/mindustry/ui/fragments/MenuFragment.java
++++ b/core/src/mindustry/ui/fragments/MenuFragment.java
+@@ -19,6 +19,7 @@ import mindustry.game.EventType.*;
+ import mindustry.gen.*;
+ import mindustry.graphics.*;
+ import mindustry.ui.*;
++import mindustryX.features.*;
+ import mindustryX.features.ui.*;
+ 
+ import static mindustry.Vars.*;
+@@ -64,9 +65,9 @@ public class MenuFragment{
+             }).grow();
+         });
+ 
+-        parent.fill(c -> c.bottom().right().button(Icon.discord, new ImageButtonStyle(){{
+-            up = discordBanner;
+-        }}, ui.discord::show).marginTop(9f).marginLeft(10f).tooltip("@discord").size(84, 45).name("discord"));
++//        parent.fill(c -> c.bottom().right().button(Icon.discord, new ImageButtonStyle(){{
++//            up = discordBanner;
++//        }}, ui.discord::show).marginTop(9f).marginLeft(10f).tooltip("@discord").size(84, 45).name("discord"));
+ 
+         //info icon
+         if(mobile){
+@@ -94,18 +95,6 @@ public class MenuFragment{
+                 fontColor = Color.white;
+                 up = infoBanner;
+             }}, ui.about::show).size(84, 45).name("info"));
+-        }else if(becontrol.active()){
+-            parent.fill(c -> c.bottom().right().button("@be.check", Icon.refresh, () -> {
+-                ui.loadfrag.show();
+-                becontrol.checkUpdate(result -> {
+-                    ui.loadfrag.hide();
+-                    if(!result){
+-                        ui.showInfo("@be.noupdates");
+-                    }
+-                });
+-            }).size(200, 60).name("becheck").update(t -> {
+-                t.getLabel().setColor(becontrol.isUpdateAvailable() ? Tmp.c1.set(Color.white).lerp(Pal.accent, Mathf.absin(5f, 1f)) : Color.white);
+-            }));
+         }
+ 
+         String versionText = ((Version.build == -1) ? "[#fc8140aa]" : "[#ffffffba]") + Version.combined();

@@ -1,0 +1,186 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: way-zer <himc.wicp@gmail.com>
+Date: Mon, 5 May 2025 16:06:25 +0800
+Subject: [PATCH] =?UTF-8?q?FC(android)=20=E6=94=AF=E6=8C=81APK=E5=AE=89?=
+ =?UTF-8?q?=E8=A3=85?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ android/AndroidManifest.xml                   | 11 +++
+ android/res/xml/file_paths.xml                |  4 ++
+ .../mindustry/android/AndroidLauncher.java    | 12 ++++
+ .../mindustryX/features/ApkInstallHelper.java | 70 +++++++++++++++++++
+ 4 files changed, 97 insertions(+)
+ create mode 100644 android/res/xml/file_paths.xml
+ create mode 100644 android/src/mindustryX/features/ApkInstallHelper.java
+
+diff --git a/android/AndroidManifest.xml b/android/AndroidManifest.xml
+index 2948020fbb297c68b65c0a5490a7d78984c64c92..110d20d8c44a3e6bbd178e22a5986689cb4e6523 100644
+--- a/android/AndroidManifest.xml
++++ b/android/AndroidManifest.xml
+@@ -6,6 +6,7 @@
+     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+     <uses-permission android:name="android.permission.INTERNET"/>
++    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" /> <!-- MDTX -->
+ 
+     <application
+             android:resizeableActivity="true"
+@@ -40,6 +41,16 @@
+             </intent-filter>
+         </activity>
+ 
++
++        <provider
++                android:name="androidx.core.content.FileProvider"
++                android:authorities="${applicationId}.fileprovider"
++                android:exported="false"
++                android:grantUriPermissions="true">
++            <meta-data
++                    android:name="android.support.FILE_PROVIDER_PATHS"
++                    android:resource="@xml/file_paths" />
++        </provider>
+     </application>
+ 
+ </manifest>
+diff --git a/android/res/xml/file_paths.xml b/android/res/xml/file_paths.xml
+new file mode 100644
+index 0000000000000000000000000000000000000000..54e235c5590f4dd65fe4b989d67b82da94e1ca98
+--- /dev/null
++++ b/android/res/xml/file_paths.xml
+@@ -0,0 +1,4 @@
++<?xml version="1.0" encoding="utf-8"?>
++<paths>
++    <external-files-path name="apk_cache" path="/" />
++</paths>
+\ No newline at end of file
+diff --git a/android/src/mindustry/android/AndroidLauncher.java b/android/src/mindustry/android/AndroidLauncher.java
+index 3d40d5136f44bf3a7518c833b5d5f2964cee6a39..91a30636e9c60bd2dbfb2a4ec05a1c7a3d954bbe 100644
+--- a/android/src/mindustry/android/AndroidLauncher.java
++++ b/android/src/mindustry/android/AndroidLauncher.java
+@@ -20,6 +20,7 @@ import mindustry.game.Saves.*;
+ import mindustry.io.*;
+ import mindustry.net.*;
+ import mindustry.ui.dialogs.*;
++import mindustryX.features.*;
+ 
+ import java.io.*;
+ import java.lang.Thread.*;
+@@ -32,6 +33,7 @@ public class AndroidLauncher extends AndroidApplication{
+     boolean doubleScaleTablets = true;
+     FileChooser chooser;
+     Runnable permCallback;
++    private ApkInstallHelper apkInstaller;
+ 
+     @Override
+     protected void onCreate(Bundle savedInstanceState){
+@@ -50,6 +52,7 @@ public class AndroidLauncher extends AndroidApplication{
+         });
+ 
+         super.onCreate(savedInstanceState);
++        apkInstaller = new ApkInstallHelper(this);
+         if(doubleScaleTablets && isTablet(this)){
+             Scl.setAddition(0.5f);
+         }
+@@ -68,6 +71,9 @@ public class AndroidLauncher extends AndroidApplication{
+ 
+             @Override
+             public void shareFile(Fi file){
++                if(file.extension().equalsIgnoreCase("apk")){
++                    apkInstaller.installApk(file.file());
++                }
+             }
+ 
+             @Override
+@@ -261,6 +267,12 @@ public class AndroidLauncher extends AndroidApplication{
+         }
+     }
+ 
++    @Override
++    protected void onActivityResult(int requestCode, int resultCode, Intent data){
++        super.onActivityResult(requestCode, resultCode, data);
++        apkInstaller.onActivityResult(requestCode, resultCode);
++    }
++
+     @Override
+     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults){
+         if(requestCode == PERMISSION_REQUEST_CODE){
+diff --git a/android/src/mindustryX/features/ApkInstallHelper.java b/android/src/mindustryX/features/ApkInstallHelper.java
+new file mode 100644
+index 0000000000000000000000000000000000000000..44ae3d51de403bd575d069024c76c3b76e319fd1
+--- /dev/null
++++ b/android/src/mindustryX/features/ApkInstallHelper.java
+@@ -0,0 +1,70 @@
++package mindustryX.features;
++
++import android.app.*;
++import android.content.*;
++import android.net.*;
++import android.os.*;
++import android.provider.*;
++import android.provider.Settings;
++import androidx.core.content.*;
++import mindustry.*;
++
++import java.io.*;
++
++public class ApkInstallHelper{
++    private static final int REQUEST_INSTALL_PERMISSION = 1234;
++
++    private Activity activity;
++    private File pendingApkFile;
++
++    public ApkInstallHelper(Activity activity){
++        this.activity = activity;
++    }
++
++    /**
++     * 安装APK
++     */
++    public void installApk(File file){
++        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !activity.getPackageManager().canRequestPackageInstalls()){
++            pendingApkFile = file;
++            Intent intent = new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES);
++            intent.setData(Uri.parse("package:" + activity.getPackageName()));
++            activity.startActivityForResult(intent, REQUEST_INSTALL_PERMISSION);
++        }else{
++            installApkInternal(file);
++        }
++    }
++
++    /**
++     * 处理权限请求结果
++     */
++    public void onActivityResult(int requestCode, int resultCode){
++        if(requestCode == REQUEST_INSTALL_PERMISSION && resultCode == Activity.RESULT_OK && pendingApkFile != null){
++            installApkInternal(pendingApkFile);
++            pendingApkFile = null;
++        }
++    }
++
++    /**
++     * 执行APK安装
++     */
++    private void installApkInternal(File file){
++        try{
++            Intent intent = new Intent(Intent.ACTION_VIEW);
++            Uri uri;
++
++            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N){
++                uri = FileProvider.getUriForFile(activity, activity.getPackageName() + ".fileprovider", file);
++                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
++            }else{
++                uri = Uri.fromFile(file);
++            }
++
++            intent.setDataAndType(uri, "application/vnd.android.package-archive");
++            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
++            activity.startActivity(intent);
++        }catch(Exception e){
++            Vars.ui.showException("安装APK失败", e);
++        }
++    }
++}
+\ No newline at end of file

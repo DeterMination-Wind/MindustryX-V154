@@ -1,0 +1,26 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: way-zer <himc.wicp@gmail.com>
+Date: Thu, 6 Nov 2025 23:42:46 +0800
+Subject: [PATCH] UI: hidden hudText when ResetEvent
+
+---
+ core/src/mindustry/ui/fragments/HudFragment.java | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/core/src/mindustry/ui/fragments/HudFragment.java b/core/src/mindustry/ui/fragments/HudFragment.java
+index 2992b9d6898b16d1b60c3e2871aba3babe9698da..727e88b85eff74af2f28d8f8bbc95a7449534f04 100644
+--- a/core/src/mindustry/ui/fragments/HudFragment.java
++++ b/core/src/mindustry/ui/fragments/HudFragment.java
+@@ -535,6 +535,12 @@ public class HudFragment{
+             }));
+         });
+ 
++        //MDTX: hidden when change map
++        Events.on(EventType.ResetEvent.class, e -> {
++            hudText = "";
++            showHudText = false;
++        });
++
+         //spawner warning
+         parent.fill(t -> {
+             t.name = "nearpoint";

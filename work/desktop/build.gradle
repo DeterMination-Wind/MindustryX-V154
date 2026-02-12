@@ -1,0 +1,56 @@
+sourceSets.main.java.srcDirs = ["src/"]
+
+project.ext.mainClassName = "mindustry.desktop.DesktopLauncher"
+project.ext.assetsDir = new File("../core/assets")
+
+task run(dependsOn: [classes, ":core:allAssets"], type: JavaExec){
+    mainClass = project.mainClassName
+    classpath = files(sourceSets.main.runtimeClasspath, tasks.getByPath(":core:allAssets"))
+    standardInput = System.in
+    workingDir = project.assetsDir
+    ignoreExitValue = true
+
+    if(System.getProperty("os.name").toLowerCase().contains("mac")){
+        jvmArgs("-XstartOnFirstThread")
+    }
+
+    jvmArgs += "-XX:+ShowCodeDetailsInExceptionMessages"
+
+    if(project.hasProperty("args")){
+        args Eval.me(project.getProperties()["args"])
+    }
+
+    if(project.hasProperty("jvmArgs")){
+        jvmArgs((List<String>)Eval.me(project.getProperties()["jvmArgs"]))
+    }
+
+    if(project.hasProperty("dataDir")){
+        environment("MINDUSTRY_DATA_DIR", project.getProperties()["dataDir"])
+    }
+
+    if(args.contains("debug")){
+        mainClass = "mindustry.debug.DebugLauncher"
+    }
+}
+
+task dist(type: Jar, dependsOn: configurations.runtimeClasspath){
+    dependsOn ":desktop:processResources"
+
+    from files(sourceSets.main.output.classesDirs)
+    from files(sourceSets.main.output.resourcesDir)
+    from {configurations.runtimeClasspath.collect{ it.isDirectory() ? it : zipTree(it) }}
+    from(files(tasks.getByPath(":core:allAssets")))
+    exclude("config/**")
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    //don't include steam shared libraries unless necessary
+    if(!versionModifier.contains("steam")){
+        exclude("**steam**.so", "**steam**.dll", "**steam**.dylib")
+    }
+
+    archiveFileName = "${appName}.jar"
+
+    manifest{
+        attributes 'Main-Class': project.mainClassName
+    }
+}

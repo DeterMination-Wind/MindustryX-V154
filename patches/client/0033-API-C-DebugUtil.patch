@@ -1,0 +1,80 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: way-zer <himc.wicp@gmail.com>
+Date: Sat, 20 Apr 2024 20:56:38 +0800
+Subject: [PATCH] API&C: DebugUtil
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+更多统计信息
+way-zer <himc.wicp@gmail.com> on 2024/7/21
+---
+ core/src/mindustry/ClientLauncher.java           | 2 +-
+ core/src/mindustry/core/Logic.java               | 3 +++
+ core/src/mindustry/ui/fragments/HudFragment.java | 5 +++++
+ 3 files changed, 9 insertions(+), 1 deletion(-)
+
+diff --git a/core/src/mindustry/ClientLauncher.java b/core/src/mindustry/ClientLauncher.java
+index 03945cddb87fc0c8fb583f126dde24fa60427e0c..d1f56e112a9ab9b4acf82d6a0211db94b0f5d659 100644
+--- a/core/src/mindustry/ClientLauncher.java
++++ b/core/src/mindustry/ClientLauncher.java
+@@ -89,7 +89,7 @@ public abstract class ClientLauncher extends ApplicationCore implements Platform
+         });
+ 
+         UI.loadColors();
+-        batch = new SpriteBatch();
++        batch = new MySpriteBatch();
+         assets = new AssetManager();
+         assets.setLoader(Texture.class, "." + mapExtension, new MapPreviewLoader());
+ 
+diff --git a/core/src/mindustry/core/Logic.java b/core/src/mindustry/core/Logic.java
+index fc26751e2084eb02d1c3af39a09049268f670e48..3a17afbcf780bac3954ccea414d5c51077106853 100644
+--- a/core/src/mindustry/core/Logic.java
++++ b/core/src/mindustry/core/Logic.java
+@@ -20,6 +20,7 @@ import mindustry.type.Weather.*;
+ import mindustry.world.*;
+ import mindustry.world.blocks.storage.*;
+ import mindustry.world.blocks.storage.CoreBlock.*;
++import mindustryX.features.*;
+ 
+ import java.util.*;
+ 
+@@ -400,6 +401,7 @@ public class Logic implements ApplicationListener{
+         PerfCounter.frame.end();
+         PerfCounter.frame.begin();
+ 
++        var start = Time.nanos();
+         Events.fire(Trigger.update);
+         universe.updateGlobal();
+ 
+@@ -512,6 +514,7 @@ public class Logic implements ApplicationListener{
+         }else if(netServer.isWaitingForPlayers() && runStateCheck){
+             checkGameState();
+         }
++        DebugUtil.logicTime = Time.timeSinceNanos(start);
+     }
+ 
+     /** @return whether the wave timer is paused due to enemies */
+diff --git a/core/src/mindustry/ui/fragments/HudFragment.java b/core/src/mindustry/ui/fragments/HudFragment.java
+index 3bb78bab55e4180a95829fb32f0ac3d66c5a1bcb..3cf7581a3720140b16fa5793c01e71e4481ab616 100644
+--- a/core/src/mindustry/ui/fragments/HudFragment.java
++++ b/core/src/mindustry/ui/fragments/HudFragment.java
+@@ -31,6 +31,8 @@ import mindustry.ui.*;
+ import mindustry.world.*;
+ import mindustry.world.blocks.environment.*;
+ import mindustry.world.meta.*;
++import mindustryX.*;
++import mindustryX.features.*;
+ 
+ import static mindustry.Vars.*;
+ import static mindustry.gen.Tex.*;
+@@ -420,6 +422,9 @@ public class HudFragment{
+ 
+                 info.label(() -> fps.get(Core.graphics.getFramesPerSecond())).left().style(Styles.outlineLabel).name("fps");
+                 info.row();
++                info.label(() -> Strings.format("LG/DW/UI(ms) @/@/@", Time.nanosToMillis(DebugUtil.logicTime), Time.nanosToMillis(DebugUtil.rendererTime), Time.nanosToMillis(DebugUtil.uiTime)))
++                .left().style(Styles.outlineLabel).name("cpuTime");
++                info.row();
+ 
+                 if(android){
+                     info.label(() -> memnative.get((int)(Core.app.getJavaHeap() / 1024 / 1024), (int)(Core.app.getNativeHeap() / 1024 / 1024))).left().style(Styles.outlineLabel).name("memory2");

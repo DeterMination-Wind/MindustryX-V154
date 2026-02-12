@@ -1,0 +1,72 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: way-zer <himc.wicp@gmail.com>
+Date: Wed, 20 Mar 2024 23:51:15 +0800
+Subject: [PATCH] HC: ReplayController
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+兼容ARC的mrep格式
+way-zer <himc.wicp@gmail.com> on 2024/4/22 at 18:10
+
+实现功能按钮
+way-zer <himc.wicp@gmail.com> on 2024/4/22 at 20:15
+---
+ core/src/mindustry/core/NetClient.java | 2 ++
+ core/src/mindustry/io/TypeIO.java      | 2 +-
+ core/src/mindustry/net/Net.java        | 2 ++
+ 3 files changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/core/src/mindustry/core/NetClient.java b/core/src/mindustry/core/NetClient.java
+index a961d0953d07bd427d6071efe6b526ce22b12505..77e23fff3efb2bc6d4ed8ca01086716823d3c869 100644
+--- a/core/src/mindustry/core/NetClient.java
++++ b/core/src/mindustry/core/NetClient.java
+@@ -27,6 +27,7 @@ import mindustry.net.Packets.*;
+ import mindustry.world.*;
+ import mindustry.world.modules.*;
+ import mindustryX.*;
++import mindustryX.features.*;
+ 
+ import java.io.*;
+ import java.util.*;
+@@ -114,6 +115,7 @@ public class NetClient implements ApplicationListener{
+                 return;
+             }
+ 
++            ReplayController.onConnect(packet.addressTCP);
+             net.send(c, true);
+         });
+ 
+diff --git a/core/src/mindustry/io/TypeIO.java b/core/src/mindustry/io/TypeIO.java
+index 2664dbf6c33792dbfb65261486a3c9983c7776d0..9dce3a88534d6f6f609c0c26b98287b84902f5db 100644
+--- a/core/src/mindustry/io/TypeIO.java
++++ b/core/src/mindustry/io/TypeIO.java
+@@ -318,7 +318,7 @@ public class TypeIO{
+             netClient.addRemovedEntity(entity.id());
+         }
+ 
+-        return null; //no need to actually return anything
++        return new UnitSyncContainer(entity); //MDTX: We should return non-null
+     }
+ 
+     public static void writeUnit(Writes write, Unit unit){
+diff --git a/core/src/mindustry/net/Net.java b/core/src/mindustry/net/Net.java
+index 7072e96706e4134bccc29c2cd6b40e2290b1072c..39e9077a7db6007c85699ea987ecc04be6e2416a 100644
+--- a/core/src/mindustry/net/Net.java
++++ b/core/src/mindustry/net/Net.java
+@@ -11,6 +11,7 @@ import mindustry.gen.*;
+ import mindustry.net.Packets.*;
+ import mindustry.net.Streamable.*;
+ import mindustryX.events.*;
++import mindustryX.features.*;
+ import net.jpountz.lz4.*;
+ 
+ import java.io.*;
+@@ -295,6 +296,7 @@ public class Net{
+             int p = object.getPriority();
+ 
+             if(clientLoaded || p == Packet.priorityHigh){
++                ReplayController.onClientPacket(object);
+                 if(clientListeners.get(object.getClass()) != null){
+                     clientListeners.get(object.getClass()).get(object);
+                 }else{

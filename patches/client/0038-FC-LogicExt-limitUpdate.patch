@@ -1,0 +1,39 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: way-zer <himc.wicp@gmail.com>
+Date: Fri, 24 May 2024 19:45:32 +0800
+Subject: [PATCH] FC(LogicExt) limitUpdate
+
+---
+ core/src/mindustry/entities/EntityGroup.java | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/core/src/mindustry/entities/EntityGroup.java b/core/src/mindustry/entities/EntityGroup.java
+index ea8ef0cdb8a30b54bb304543ea92dc99da44acb6..e251d6586a933556b3f8bf68c272f12410c2d13d 100644
+--- a/core/src/mindustry/entities/EntityGroup.java
++++ b/core/src/mindustry/entities/EntityGroup.java
+@@ -6,6 +6,7 @@ import arc.math.geom.*;
+ import arc.struct.*;
+ import arc.util.*;
+ import mindustry.gen.*;
++import mindustryX.features.*;
+ 
+ import java.util.*;
+ 
+@@ -80,6 +81,17 @@ public class EntityGroup<T extends Entityc> implements Iterable<T>{
+     }
+ 
+     public void update(){
++        if(LogicExt.limitUpdate.get() > 0 && LogicExt.limitUpdateTimer != 0){
++            Core.camera.bounds(viewport);
++            viewport.grow(LogicExt.limitUpdate.get() * 2);
++            for(index = 0; index < array.size; index++){
++                Entityc e = array.items[index];
++                if(e instanceof Position p && !viewport.contains(p.getX(), p.getY()))
++                    continue;
++                array.items[index].update();
++            }
++            return;
++        }
+         for(index = 0; index < array.size; index++){
+             array.items[index].update();
+         }

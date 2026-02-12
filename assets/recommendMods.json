@@ -1,0 +1,45 @@
+{
+  "lastUpdated": "2025/7/25 9:20",
+  "modRecommend": [
+    {
+      "repo": "eb-wilson/toomanyitems",
+      "reason": "Too Many Items(TMI)类似Minecraft的JEI物品管理器\n提供了检索物品、单位、方块、电力、热量的用途以及获取途径"
+    },
+    {
+      "repo": "mnemotechnician/new-console",
+      "reason": "NewConsole提供了新的控制台，方便调试者执行js代码\n1.保存js代码的执行记录\n2.读写简单js文件"
+    },
+    {
+      "repo": "way-zer/contentstweaker",
+      "reason": "[yellow]弃用，原版已支持[]ContentsTweaker(CT)允许地图调整内容、添加UI等"
+    },
+    {
+      "repo": "blackdeluxecat/mapfilterext",
+      "reason": "MapFilterExt(MFE)允许在地图编辑器中渲染自定义数学图形\n提供时间轴式波次编辑器\n添加一些链式变换的地形筛选器"
+    },
+    {
+      "repo": "blackdeluxecat/schematicparse",
+      "reason": "SchematicParse(SP)，提供计算工厂比例的蓝图算盘\n允许在蓝图详情页查看信息板、复制逻辑代码"
+    },
+    {
+      "repo": "blackdeluxecat/mi2-utilities-java",
+      "reason": "MI2-Utilities-Java(MI2U)，提供视觉和操作上的辅助\n懂的都懂"
+    },
+    {
+      "repo": "eb-wilson/helium",
+      "reason": "美化Mod\n提供了毛玻璃背景、更好的Mod管理界面等功能物品。其他功能按需关闭"
+    },
+    {
+      "repo": "i-hope1/mod-tools",
+      "reason": "MOD调试工具\n为开发人员提供了许多有用的工具。"
+    },
+    {
+      "repo": "Yuria-Shikibe/NewHorizonMod",
+      "reason": "新视界(简称NH)，大量新的扩展内容\n这是内容MOD，多人游戏不兼容。"
+    },
+    {
+      "repo": "xpdustry/claj",
+      "reason": "提供一个简单的方式快速创建多人联机。\n依赖的服务器在海外，可能不稳定。\n无法直接安装，需要手动选择预发布版本"
+    }
+  ]
+}

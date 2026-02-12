@@ -1,0 +1,267 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: way-zer <himc.wicp@gmail.com>
+Date: Sat, 20 Apr 2024 19:35:22 +0800
+Subject: [PATCH] =?UTF-8?q?OG:=20=E5=87=8F=E5=B0=91=E9=83=A8=E5=88=86lambd?=
+ =?UTF-8?q?a=E5=86=85=E5=AD=98=E5=88=86=E9=85=8D?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ core/src/mindustry/entities/Units.java        | 25 ++++-
+ .../mindustry/entities/bullet/BulletType.java | 11 ++-
+ .../src/mindustry/graphics/LightRenderer.java | 94 ++++++++++++++++---
+ 3 files changed, 107 insertions(+), 23 deletions(-)
+
+diff --git a/core/src/mindustry/entities/Units.java b/core/src/mindustry/entities/Units.java
+index 8a4d5b458679db124b0535b401ab2b1f8aaa4dde..13877e9b23cb4aa6b7934e10014f630076810a28 100644
+--- a/core/src/mindustry/entities/Units.java
++++ b/core/src/mindustry/entities/Units.java
+@@ -276,6 +276,10 @@ public class Units{
+         }
+     }
+ 
++    private static float rangeL, xL, yL;
++    private static Team teamL;
++    private static Boolf<Unit> predicateL;
++    private static Sortf sortL;
+     /** Returns the closest enemy of this team. Filter by predicate. */
+     public static Unit closestEnemy(Team team, float x, float y, float range, Boolf<Unit> predicate){
+         if(team == Team.derelict) return null;
+@@ -284,11 +288,16 @@ public class Units{
+         cdist = 0f;
+         cpriority = -99999f;
+ 
++        xL = x;
++        yL = y;
++        rangeL = range;
++        teamL = team;
++        predicateL = predicate;
+         nearbyEnemies(team, x - range, y - range, range*2f, range*2f, e -> {
+-            if(e.dead() || !predicate.get(e) || e.team == Team.derelict || !e.targetable(team) || e.inFogTo(team)) return;
++            if(e.dead() || !predicateL.get(e) || e.team == Team.derelict || !e.targetable(teamL) || e.inFogTo(teamL)) return;
+ 
+-            float dst2 = e.dst2(x, y) - (e.hitSize * e.hitSize);
+-            if(dst2 < range*range && (result == null || dst2 < cdist || e.type.targetPriority > cpriority) && e.type.targetPriority >= cpriority){
++            float dst2 = e.dst2(xL, yL) - (e.hitSize * e.hitSize);
++            if(dst2 < rangeL*rangeL && (result == null || dst2 < cdist || e.type.targetPriority > cpriority) && e.type.targetPriority >= cpriority){
+                 result = e;
+                 cdist = dst2;
+                 cpriority = e.type.targetPriority;
+@@ -306,10 +315,16 @@ public class Units{
+         cdist = 0f;
+         cpriority = -99999f;
+ 
++        xL = x;
++        yL = y;
++        rangeL = range;
++        teamL = team;
++        predicateL = predicate;
++        sortL = sort;
+         nearbyEnemies(team, x - range, y - range, range*2f, range*2f, e -> {
+-            if(e.dead() || !predicate.get(e) || e.team == Team.derelict || !e.within(x, y, range + e.hitSize/2f) || !e.targetable(team) || e.inFogTo(team)) return;
++            if(e.dead() || !predicateL.get(e) || e.team == Team.derelict || !e.within(xL, yL, rangeL + e.hitSize/2f) || !e.targetable(teamL) || e.inFogTo(teamL)) return;
+ 
+-            float cost = sort.cost(e, x, y);
++            float cost = sortL.cost(e, xL, yL);
+             if((result == null || cost < cdist || e.type.targetPriority > cpriority) && e.type.targetPriority >= cpriority){
+                 result = e;
+                 cdist = cost;
+diff --git a/core/src/mindustry/entities/bullet/BulletType.java b/core/src/mindustry/entities/bullet/BulletType.java
+index a74c13edce50a82fb114debc301d9ca0e7e3f2da..aa8c219a6c36218e6dadc0802389399e41d1ec2b 100644
+--- a/core/src/mindustry/entities/bullet/BulletType.java
++++ b/core/src/mindustry/entities/bullet/BulletType.java
+@@ -717,6 +717,7 @@ public class BulletType extends Content implements Cloneable{
+         }
+     }
+ 
++    private static Bullet argBullet;
+     public void updateHoming(Bullet b){
+         if(homingPower > 0.0001f && b.time >= homingDelay){
+             float realAimX = b.aimX < 0 ? b.x : b.aimX;
+@@ -724,20 +725,22 @@ public class BulletType extends Content implements Cloneable{
+ 
+             Teamc target;
+             //home in on allies if possible
++            argBullet = b;
+             if(heals()){
+                 target = Units.closestTarget(null, realAimX, realAimY, homingRange,
+-                e -> e.checkTarget(collidesAir, collidesGround) && e.team != b.team && !b.hasCollided(e.id),
+-                t -> collidesGround && (t.team != b.team || t.damaged()) && !b.hasCollided(t.id)
++                e -> e.checkTarget(collidesAir, collidesGround) && e.team != argBullet.team && !argBullet.hasCollided(e.id),
++                t -> collidesGround && (t.team != argBullet.team || t.damaged()) && !argBullet.hasCollided(t.id)
+                 );
+             }else{
+                 if(b.aimTile != null && b.aimTile.build != null && b.aimTile.build.team != b.team && collidesGround && !b.hasCollided(b.aimTile.build.id)){
+                     target = b.aimTile.build;
+                 }else{
+                     target = Units.closestTarget(b.team, realAimX, realAimY, homingRange,
+-                        e -> e != null && e.checkTarget(collidesAir, collidesGround) && !b.hasCollided(e.id),
+-                        t -> t != null && collidesGround && !b.hasCollided(t.id));
++                    e -> e != null && e.checkTarget(collidesAir, collidesGround) && !argBullet.hasCollided(e.id),
++                    t -> t != null && collidesGround && !argBullet.hasCollided(t.id));
+                 }
+             }
++            argBullet = null;
+ 
+             if(target != null){
+                 b.vel.setAngle(Angles.moveToward(b.rotation(), b.angleTo(target), homingPower * Time.delta * 50f));
+diff --git a/core/src/mindustry/graphics/LightRenderer.java b/core/src/mindustry/graphics/LightRenderer.java
+index c20e841ab3869ca8d6240bf844cc87ef12eee47f..c4e410344800217c3adf2e2a0ea7635b6ffc4fc5 100644
+--- a/core/src/mindustry/graphics/LightRenderer.java
++++ b/core/src/mindustry/graphics/LightRenderer.java
+@@ -8,6 +8,7 @@ import arc.math.*;
+ import arc.math.geom.*;
+ import arc.struct.*;
+ import arc.util.*;
++import arc.util.pooling.*;
+ import mindustry.*;
+ 
+ import static mindustry.Vars.*;
+@@ -16,10 +17,9 @@ import static mindustry.Vars.*;
+ public class LightRenderer{
+     private static final int scaling = 4;
+ 
+-    private float[] vertices = new float[24];
+-    private FrameBuffer buffer = new FrameBuffer();
+-    private Seq<Runnable> lights = new Seq<>();
+-    private Seq<CircleLight> circles = new Seq<>(CircleLight.class);
++    private final FrameBuffer buffer = new FrameBuffer();
++    private final Seq<Runnable> lights = new Seq<>(Runnable.class);
++    private final Seq<CircleLight> circles = new Seq<>(CircleLight.class);
+     private int circleIndex = 0;
+     private TextureRegion circleRegion;
+ 
+@@ -44,7 +44,7 @@ public class LightRenderer{
+ 
+         circleIndex ++;
+     }
+-    
++
+     public void add(float x, float y, TextureRegion region, Color color, float opacity){
+         add(x, y, region, 0f, color, opacity);
+     }
+@@ -52,26 +52,87 @@ public class LightRenderer{
+     public void add(float x, float y, TextureRegion region, float rotation, Color color, float opacity){
+         if(!enabled()) return;
+ 
+-        float res = color.toFloatBits();
++        float res = Tmp.c1.set(color).a(opacity).toFloatBits();
+         float xscl = Draw.xscl, yscl = Draw.yscl;
+-        add(() -> {
++        add(RegionData.pool.obtain().set(res, xscl, yscl, region, x, y, rotation));
++    }
++
++    private static class RegionData implements Runnable, Pool.Poolable{
++        static Pool<RegionData> pool = Pools.get(RegionData.class,RegionData::new);
++        private float res;
++        private float xscl;
++        private float yscl;
++        private TextureRegion region;
++        private float x;
++        private float y;
++        private float rotation;
++
++        @Override
++        public void reset(){
++            region = null;
++        }
++
++        public RegionData set(float res, float xscl, float yscl, TextureRegion region, float x, float y, float rotation){
++            this.res = res;
++            this.xscl = xscl;
++            this.yscl = yscl;
++            this.region = region;
++            this.x = x;
++            this.y = y;
++            this.rotation = rotation;
++            return this;
++        }
++
++        @Override
++        public void run(){
+             Draw.color(res);
+-            Draw.alpha(opacity);
+             Draw.scl(xscl, yscl);
+             Draw.rect(region, x, y, rotation);
+             Draw.scl();
+-        });
++        }
+     }
+ 
+     public void line(float x, float y, float x2, float y2, float stroke, Color tint, float alpha){
+         if(!enabled()) return;
+ 
+-        add(() -> {
+-            Draw.color(tint, alpha);
+ 
+-            float rot = Mathf.angleExact(x2 - x, y2 - y);
+-            TextureRegion ledge = Core.atlas.find("circle-end"), lmid = Core.atlas.find("circle-mid");
++        float res = Tmp.c1.set(tint).a(alpha).toFloatBits();
++        add(LineData.pool.obtain().set(res, x2, x, y2, y, stroke));
++    }
++
++    private static class LineData implements Runnable, Pool.Poolable{
++        static Pool<LineData> pool = Pools.get(LineData.class,LineData::new);
++        private static final float[] vertices = new float[24];
++        private static TextureRegion ledge,lmid;
++        private float tint;
++        private float x2;
++        private float x;
++        private float y2;
++        private float y;
++        private float stroke;
++
++        @Override
++        public void reset(){}
++
++        public LineData set(float tint, float x2, float x, float y2, float y, float stroke){
++            this.tint = tint;
++            this.x2 = x2;
++            this.x = x;
++            this.y2 = y2;
++            this.y = y;
++            this.stroke = stroke;
++            return this;
++        }
++
++        @Override
++        public void run(){
++            Draw.color(tint);
+ 
++            float rot = Mathf.angleExact(x2 - x, y2 - y);
++            if(ledge == null){
++                ledge = Core.atlas.find("circle-end");
++                lmid = Core.atlas.find("circle-mid");
++            }
+             float color = Draw.getColorPacked();
+             float u = lmid.u;
+             float v = lmid.v2;
+@@ -180,7 +241,7 @@ public class LightRenderer{
+             vertices[23] = 0;
+ 
+             Draw.vert(ledge.texture, vertices, 0, vertices.length);
+-        });
++        }
+     }
+ 
+     public boolean enabled(){
+@@ -189,6 +250,7 @@ public class LightRenderer{
+ 
+     public void draw(){
+         if(!Vars.enableLight){
++            Pools.freeAll(lights);
+             lights.clear();
+             circleIndex = 0;
+             return;
+@@ -222,6 +284,10 @@ public class LightRenderer{
+         Shaders.light.ambient.set(state.rules.ambientLight);
+         buffer.blit(Shaders.light);
+ 
++        for(var o : lights.items){
++            if(o instanceof LineData) LineData.pool.free((LineData)o);
++            else if(o instanceof RegionData) RegionData.pool.free((RegionData)o);
++        }
+         lights.clear();
+         circleIndex = 0;
+     }

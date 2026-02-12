@@ -1,0 +1,39 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: way-zer <himc.wicp@gmail.com>
+Date: Sat, 3 Aug 2024 20:59:46 +0800
+Subject: [PATCH] OC: speedup SchematicsDialog showing.
+
+---
+ core/src/mindustry/ui/dialogs/SchematicsDialog.java | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/core/src/mindustry/ui/dialogs/SchematicsDialog.java b/core/src/mindustry/ui/dialogs/SchematicsDialog.java
+index 508ec2a6c99e96b56f2cc76aa98afbf004636b06..fef8e21d771ccfd81cbc65a0bc62642ebf721952 100644
+--- a/core/src/mindustry/ui/dialogs/SchematicsDialog.java
++++ b/core/src/mindustry/ui/dialogs/SchematicsDialog.java
+@@ -683,6 +683,7 @@ public class SchematicsDialog extends BaseDialog{
+     }
+ 
+     public static class SchematicImage extends Image{
++        private static boolean setLock = false;
+         public float scaling = 16f;
+         public float thickness = 4f;
+         public Color borderColor = Pal.gray;
+@@ -708,7 +709,8 @@ public class SchematicsDialog extends BaseDialog{
+                 && ((Button)parent.parent).isOver();
+ 
+             boolean wasSet = set;
+-            if(!set){
++            if(!set && !setLock){
++                setLock = true;
+                 Core.app.post(this::setPreview);
+                 set = true;
+             }else if(lastTexture != null && lastTexture.isDisposed()){
+@@ -739,6 +741,7 @@ public class SchematicsDialog extends BaseDialog{
+         }
+ 
+         private void setPreview(){
++            setLock = false;
+             TextureRegionDrawable draw = new TextureRegionDrawable(new TextureRegion(lastTexture = schematics.getPreview(schematic)));
+             setDrawable(draw);
+             setScaling(Scaling.fit);

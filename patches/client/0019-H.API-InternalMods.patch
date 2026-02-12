@@ -1,0 +1,33 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: way-zer <himc.wicp@gmail.com>
+Date: Fri, 23 Feb 2024 16:37:59 +0800
+Subject: [PATCH] H.API: InternalMods
+
+---
+ core/src/mindustry/mod/Mods.java | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/core/src/mindustry/mod/Mods.java b/core/src/mindustry/mod/Mods.java
+index 766eae0f6f0bd09688424d967f41c8ae9cc638a5..fe2e89fd58994eb650158b9b7e6e254d9d70f570 100644
+--- a/core/src/mindustry/mod/Mods.java
++++ b/core/src/mindustry/mod/Mods.java
+@@ -153,6 +153,10 @@ public class Mods implements Loadable{
+         eachEnabled(mod -> {
+             Seq<Fi> sprites = mod.root.child("sprites").findAll(f -> f.extension().equals("png"));
+             Seq<Fi> overrides = mod.root.child("sprites-override").findAll(f -> f.extension().equals("png"));
++            //MDTX: fix sprites-override path for self
++            if(mod.root.path().equals("/mindustryX/mods/MindustryX")){
++                overrides = mindustryX.features.InternalMods.spritesOverride();
++            }
+ 
+             if(sprites.isEmpty() && overrides.isEmpty()) return;
+ 
+@@ -493,7 +497,7 @@ public class Mods implements Loadable{
+     /** Loads all mods from the folder, but does not call any methods on them.*/
+     public void load(){
+         var candidates = new Seq<Fi>();
+-
++        mods.addAll(mindustryX.features.InternalMods.load());
+         // Add local mods
+         Seq.with(modDirectory.list())
+         .retainAll(f -> f.extEquals("jar") || f.extEquals("zip") || (f.isDirectory() && Structs.contains(metaFiles, meta -> resolveRoot(f).child(meta).exists())))

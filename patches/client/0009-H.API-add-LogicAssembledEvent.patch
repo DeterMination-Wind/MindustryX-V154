@@ -1,0 +1,90 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: way-zer <himc.wicp@gmail.com>
+Date: Thu, 3 Aug 2023 12:20:38 +0800
+Subject: [PATCH] H.API: add LogicAssembledEvent
+
+---
+ core/src/mindustry/logic/LParser.java                 |  4 +++-
+ core/src/mindustry/logic/LStatements.java             | 11 +++++++++++
+ core/src/mindustry/world/blocks/logic/LogicBlock.java |  4 ++++
+ 3 files changed, 18 insertions(+), 1 deletion(-)
+
+diff --git a/core/src/mindustry/logic/LParser.java b/core/src/mindustry/logic/LParser.java
+index 25b7bc9ea1fe595583ae65abc1dec2c48a545661..32769d6ee3e25f884f53ce1d67a22dc51533f77c 100644
+--- a/core/src/mindustry/logic/LParser.java
++++ b/core/src/mindustry/logic/LParser.java
+@@ -5,6 +5,8 @@ import arc.util.*;
+ import mindustry.gen.*;
+ import mindustry.logic.LStatements.*;
+ 
++import java.util.*;
++
+ public class LParser{
+     private static final String[] tokens = new String[16];
+     private static final int maxJumps = 500;
+@@ -161,7 +163,7 @@ public class LParser{
+                         }
+                     }else{
+                         //unparseable statement
+-                        statements.add(new InvalidStatement());
++                        statements.add(new InvalidStatement(Arrays.copyOf(tokens, tok)));
+                     }
+                 }
+                 line ++;
+diff --git a/core/src/mindustry/logic/LStatements.java b/core/src/mindustry/logic/LStatements.java
+index 96ca6c4e1f21cb641e47db3418ab3941685d6f73..c230ed1f4732f74fea8ee859c0f6eda415ce9c71 100644
+--- a/core/src/mindustry/logic/LStatements.java
++++ b/core/src/mindustry/logic/LStatements.java
+@@ -20,6 +20,7 @@ import mindustry.type.*;
+ import mindustry.ui.*;
+ import mindustry.world.*;
+ import mindustry.world.meta.*;
++import mindustryX.*;
+ 
+ import static mindustry.Vars.*;
+ import static mindustry.logic.LCanvas.*;
+@@ -45,6 +46,16 @@ public class LStatements{
+ 
+     @RegisterStatement("noop")
+     public static class InvalidStatement extends LStatement{
++        @MindustryXApi
++        public transient String[] tokens = {};
++
++        public InvalidStatement(){
++        }
++
++        @MindustryXApi
++        public InvalidStatement(String[] tokens){
++            this.tokens = tokens;
++        }
+ 
+         @Override
+         public void build(Table table){
+diff --git a/core/src/mindustry/world/blocks/logic/LogicBlock.java b/core/src/mindustry/world/blocks/logic/LogicBlock.java
+index 4be2ee93287a60ea694a50292c11632f086e2606..2a8175d97b75b28648f96f62afbc5eebd6976f4c 100644
+--- a/core/src/mindustry/world/blocks/logic/LogicBlock.java
++++ b/core/src/mindustry/world/blocks/logic/LogicBlock.java
+@@ -1,5 +1,6 @@
+ package mindustry.world.blocks.logic;
+ 
++import arc.*;
+ import arc.Graphics.*;
+ import arc.Graphics.Cursor.*;
+ import arc.func.*;
+@@ -25,6 +26,7 @@ import mindustry.world.*;
+ import mindustry.world.blocks.ConstructBlock.*;
+ import mindustry.world.meta.*;
+ import mindustryX.*;
++import mindustryX.events.*;
+ 
+ import java.io.*;
+ import java.util.zip.*;
+@@ -400,6 +402,8 @@ public class LogicBlock extends Block{
+                     asm.putConst("@thisx", World.conv(x));
+                     asm.putConst("@thisy", World.conv(y));
+ 
++                    //MDTX: LogicAssembledEvent
++                    Events.fire(new LogicAssembledEvent(this, asm));
+                     executor.load(asm);
+                     executor.unit.objval = oldUnit;
+                     executor.unit.isobj = true;

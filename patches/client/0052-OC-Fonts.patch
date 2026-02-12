@@ -1,0 +1,119 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: way-zer <himc.wicp@gmail.com>
+Date: Sun, 28 Jul 2024 14:16:29 +0800
+Subject: [PATCH] =?UTF-8?q?OC:=20=E6=95=B4=E7=90=86Fonts=E7=B1=BB?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+更好的字体包支持
+---
+ core/src/mindustry/ClientLauncher.java |  6 ++----
+ core/src/mindustry/core/UI.java        |  4 ----
+ core/src/mindustry/ui/Fonts.java       | 30 ++++++++++++++------------
+ 3 files changed, 18 insertions(+), 22 deletions(-)
+
+diff --git a/core/src/mindustry/ClientLauncher.java b/core/src/mindustry/ClientLauncher.java
+index 3db82e7f8a67f9f4a8ec04bbd50691ba8d5e0203..4b2e47a600e2a0d040bafac68fde4fad7016a37d 100644
+--- a/core/src/mindustry/ClientLauncher.java
++++ b/core/src/mindustry/ClientLauncher.java
+@@ -165,10 +165,8 @@ public abstract class ClientLauncher extends ApplicationCore implements Platform
+ 
+         assets.load(new Vars());
+ 
+-        Fonts.loadDefaultFont();
+-
+         //load fallback atlas if max texture size is below 4096
+-        assets.load(new AssetDescriptor<>(maxTextureSize >= 4096 ? "sprites/sprites.aatls" : "sprites/fallback/sprites.aatls", TextureAtlas.class)).loaded = t -> atlas = t;
++        assets.load(maxTextureSize >= 4096 ? "sprites/sprites.aatls" : "sprites/fallback/sprites.aatls", TextureAtlas.class).loaded = t -> atlas = t;
+         assets.loadRun("maps", Map.class, () -> maps.loadPreviews());
+ 
+         Musics.load();
+@@ -183,11 +181,11 @@ public abstract class ClientLauncher extends ApplicationCore implements Platform
+         });
+ 
+         assets.load(mods);
+-        assets.loadRun("mergeUI", PixmapPacker.class, () -> {}, () -> Fonts.mergeFontAtlas(atlas));
+ 
+         add(logic = new Logic());
+         add(control = new Control());
+         add(renderer = new Renderer());
++        Fonts.loadFonts();
+         add(ui = new UI());
+         add(netServer = new NetServer());
+         add(netClient = new NetClient());
+diff --git a/core/src/mindustry/core/UI.java b/core/src/mindustry/core/UI.java
+index a62f8737b3037c8c25c34a84e22369cb0e434473..9a3763d18ea8fe6ad194887daac47c42984d4589 100644
+--- a/core/src/mindustry/core/UI.java
++++ b/core/src/mindustry/core/UI.java
+@@ -85,10 +85,6 @@ public class UI implements ApplicationListener, Loadable{
+ 
+     private @Nullable Element lastAnnouncement;
+ 
+-    public UI(){
+-        Fonts.loadFonts();
+-    }
+-
+     public static void loadColors(){
+         Colors.put("accent", Pal.accent);
+         Colors.put("unlaunched", Color.valueOf("8982ed"));
+diff --git a/core/src/mindustry/ui/Fonts.java b/core/src/mindustry/ui/Fonts.java
+index 4e99cc38c12733cb61025db84d29fd0563428ba1..1de3876c6adec0c03a3f477e242aaeac0550b138 100644
+--- a/core/src/mindustry/ui/Fonts.java
++++ b/core/src/mindustry/ui/Fonts.java
+@@ -61,11 +61,25 @@ public class Fonts{
+     }
+ 
+     public static void loadFonts(){
++        loadDefaultFont();
+         largeIcons.clear();
+         FreeTypeFontParameter param = fontParameter();
+ 
+         Core.assets.load("default", Font.class, new FreeTypeFontLoaderParameter(mainFont, param)).loaded = f -> Fonts.def = f;
+ 
++        Core.assets.load("outline", Font.class, new FreeTypeFontLoaderParameter(mainFont, new FreeTypeFontParameter(){{
++            borderColor = Color.darkGray;
++            incremental = true;
++            size = 18;
++        }})).loaded = t -> Fonts.outline = t;
++
++        Core.assets.load("tech", Font.class, new FreeTypeFontLoaderParameter("fonts/tech.ttf", new FreeTypeFontParameter(){{
++            size = 18;
++        }})).loaded = f -> {
++            Fonts.tech = f;
++            Fonts.tech.getData().down *= 1.5f;
++        };
++
+         Core.assets.load("monospace", Font.class, new FreeTypeFontLoaderParameter("fonts/monospace.woff", new FreeTypeFontParameter(){{
+             size = 16;
+             incremental = true;
+@@ -94,6 +108,8 @@ public class Fonts{
+             //ASCII only
+             characters = "\0ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890\"!`?'.,;:()[]{}<>|/@\\^$€-%+=#_&~*";
+         }})).loaded = f -> Fonts.logic = f;
++
++        Core.assets.loadRun("mergeUI", PixmapPacker.class, () -> {}, () -> Fonts.mergeFontAtlas(Core.atlas));
+     }
+ 
+     public static @Nullable String unicodeToName(int unicode){
+@@ -240,20 +256,6 @@ public class Fonts{
+             }
+         });
+ 
+-        FreeTypeFontParameter param = new FreeTypeFontParameter(){{
+-            borderColor = Color.darkGray;
+-            incremental = true;
+-            size = 18;
+-        }};
+-
+-        Core.assets.load("outline", Font.class, new FreeTypeFontLoaderParameter(mainFont, param)).loaded = t -> Fonts.outline = t;
+-
+-        Core.assets.load("tech", Font.class, new FreeTypeFontLoaderParameter("fonts/tech.ttf", new FreeTypeFontParameter(){{
+-            size = 18;
+-        }})).loaded = f -> {
+-            Fonts.tech = f;
+-            Fonts.tech.getData().down *= 1.5f;
+-        };
+     }
+ 
+     /** Merges the UI and font atlas together for better performance. */

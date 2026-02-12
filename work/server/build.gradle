@@ -1,0 +1,52 @@
+sourceSets.main.java.srcDirs = ["src/"]
+
+project.ext.mainClassName = "mindustry.server.ServerLauncher"
+project.ext.assetsDir = new File("../core/assets")
+
+task run(dependsOn: classes, type: JavaExec){
+    mainClass = project.mainClassName
+    classpath = sourceSets.main.runtimeClasspath
+    standardInput = System.in
+    workingDir = project.assetsDir
+    ignoreExitValue = true
+    if(project.hasProperty("appArgs")){
+        args Eval.me(appArgs)
+    }
+    if(project.hasProperty("jvmArgs")){
+        jvmArgs((List<String>)Eval.me(project.getProperties()["jvmArgs"]))
+    }
+}
+
+task debug(dependsOn: classes, type: JavaExec){
+    mainClass = project.mainClassName
+    classpath = sourceSets.main.runtimeClasspath
+    standardInput = System.in
+    workingDir = project.assetsDir
+    ignoreExitValue = true
+    debug = true
+}
+
+task dist(type: Jar, dependsOn: configurations.runtimeClasspath){
+    dependsOn classes
+    from files(sourceSets.main.output.classesDirs)
+    from files(sourceSets.main.output.resourcesDir)
+    from {configurations.runtimeClasspath.collect{ it.isDirectory() ? it : zipTree(it) }}
+    from (files(tasks.getByPath(":core:allAssets"))){
+        include "baseparts/**"
+        include "bundles/**"
+        include "icons/icons.properties"
+        include "maps/**"
+        include "scripts/**"
+        include "sprites/block_colors.png"
+        include "basepartnames"
+        include "contrubutors"
+        include "locales"
+        include "*.*"
+    }
+
+    duplicatesStrategy = 'exclude'
+
+    manifest{
+        attributes 'Main-Class': project.mainClassName
+    }
+}

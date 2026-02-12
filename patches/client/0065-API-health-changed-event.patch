@@ -1,0 +1,209 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: MinRi2 <2275045670@qq.com>
+Date: Fri, 31 Jan 2025 23:13:28 +0800
+Subject: [PATCH] API: health changed event
+
+---
+ core/src/mindustry/entities/Damage.java        |  5 +++++
+ core/src/mindustry/entities/Lightning.java     |  1 +
+ .../mindustry/entities/bullet/BulletType.java  |  7 +++++++
+ .../mindustry/entities/comp/BuildingComp.java  |  7 ++++++-
+ .../mindustry/entities/comp/HealthComp.java    | 18 ++++++++++++++++++
+ .../mindustry/entities/comp/ShieldComp.java    |  3 +++
+ 6 files changed, 40 insertions(+), 1 deletion(-)
+
+diff --git a/core/src/mindustry/entities/Damage.java b/core/src/mindustry/entities/Damage.java
+index d75098db20ecdf67bebd01f448d705b5ab74183a..c690dcf5408a55524cf4ca704559aedbccf56a34 100644
+--- a/core/src/mindustry/entities/Damage.java
++++ b/core/src/mindustry/entities/Damage.java
+@@ -18,6 +18,7 @@ import mindustry.type.*;
+ import mindustry.world.*;
+ import mindustry.world.blocks.*;
+ import mindustry.world.meta.*;
++import mindustryX.events.*;
+ 
+ import static mindustry.Vars.*;
+ 
+@@ -506,6 +507,8 @@ public class Damage{
+             boolean dead = unit.dead;
+ 
+             float amount = calculateDamage(scaled ? Math.max(0, unit.dst(x, y) - unit.type.hitSize/2) : unit.dst(x, y), radius, damage);
++
++            HealthChangedEvent.INSTANCE.source = source;
+             unit.damage(amount);
+ 
+             if(source != null){
+@@ -554,6 +557,8 @@ public class Damage{
+             //why? because otherwise the building would absorb everything in one cell, which means much less damage than a nearby explosion.
+             //this needs to be compensated
+             if(in != null && in.team != team && in.block.size > 1 && in.health > damage){
++                HealthChangedEvent.INSTANCE.source = source;
++
+                 //deal the damage of an entire side, to be equivalent with maximum 'standard' damage
+                 float d = damage * Math.min((in.block.size), baseRadius * 0.4f);
+                 if(source != null){
+diff --git a/core/src/mindustry/entities/Lightning.java b/core/src/mindustry/entities/Lightning.java
+index 48e42b4e5fcdb86d678ceb75355c72415634f36b..b115b9617204ed997e8337248f9562b4821fa8b7 100644
+--- a/core/src/mindustry/entities/Lightning.java
++++ b/core/src/mindustry/entities/Lightning.java
+@@ -47,6 +47,7 @@ public class Lightning{
+         bhit = false;
+ 
+         for(int i = 0; i < length / 2; i++){
++            // MDTX: hitBullet set the owner to hitter.
+             hitCreate.create(null, team, x, y, rotation, damage * (hitter == null ? 1f : hitter.damageMultiplier()), 1f, 1f, hitter);
+             lines.add(new Vec2(x + Mathf.range(3f), y + Mathf.range(3f)));
+ 
+diff --git a/core/src/mindustry/entities/bullet/BulletType.java b/core/src/mindustry/entities/bullet/BulletType.java
+index 016a636562a1f5dda79e3ab0bf4a8d7aeb3e3ae8..aaa2d560cec516fdd27a5d7d940eacbe6c203184 100644
+--- a/core/src/mindustry/entities/bullet/BulletType.java
++++ b/core/src/mindustry/entities/bullet/BulletType.java
+@@ -23,6 +23,7 @@ import mindustry.graphics.*;
+ import mindustry.type.*;
+ import mindustry.world.*;
+ import mindustry.world.blocks.*;
++import mindustryX.events.*;
+ import mindustryX.features.*;
+ 
+ import static mindustry.Vars.*;
+@@ -447,6 +448,7 @@ public class BulletType extends Content implements Cloneable{
+         }
+ 
+         if(heals() && build.team == b.team && !(build.block instanceof ConstructBlock)){
++            HealthChangedEvent.INSTANCE.source = b;
+             healEffect.at(build.x, build.y, 0f, healColor, build.block);
+             build.heal(healPercent / 100f * build.maxHealth + healAmount);
+             healSound.at(build, 1f + Mathf.range(0.1f), healSoundVolume);
+@@ -468,6 +470,8 @@ public class BulletType extends Content implements Cloneable{
+         boolean wasDead = entity instanceof Unit u && u.dead;
+ 
+         if(entity instanceof Healthc h){
++            HealthChangedEvent.INSTANCE.source = entity;
++
+             float damage = b.damage;
+             float shield = entity instanceof Shieldc s ? Math.max(s.shield(), 0f) : 0f;
+             if(maxDamageFraction > 0){
+@@ -573,7 +577,9 @@ public class BulletType extends Content implements Cloneable{
+ 
+     public void createSplashDamage(Bullet b, float x, float y){
+         if(splashDamageRadius > 0 && !b.absorbed){
++            HealthChangedEvent.INSTANCE.isSplash = true;
+             Damage.damage(b.team, x, y, splashDamageRadius, splashDamage * b.damageMultiplier(), splashDamagePierce, collidesAir, collidesGround, scaledSplashDamage, b);
++            HealthChangedEvent.INSTANCE.isSplash = false;
+ 
+             if(status != StatusEffects.none){
+                 Damage.status(b.team, x, y, splashDamageRadius, status, statusDuration, collidesAir, collidesGround);
+@@ -581,6 +587,7 @@ public class BulletType extends Content implements Cloneable{
+ 
+             if(heals()){
+                 indexer.eachBlock(b.team, x, y, splashDamageRadius, Building::damaged, other -> {
++                    HealthChangedEvent.INSTANCE.source = b;
+                     healEffect.at(other.x, other.y, 0f, healColor, other.block);
+                     other.heal(healPercent / 100f * other.maxHealth() + healAmount);
+                 });
+diff --git a/core/src/mindustry/entities/comp/BuildingComp.java b/core/src/mindustry/entities/comp/BuildingComp.java
+index 3958f30572d00f047368dd82ee11b6a560d597af..ebaf61a8ebf3ab0e2b51fda88fa391e160df68cc 100644
+--- a/core/src/mindustry/entities/comp/BuildingComp.java
++++ b/core/src/mindustry/entities/comp/BuildingComp.java
+@@ -41,6 +41,7 @@ import mindustry.world.blocks.power.*;
+ import mindustry.world.consumers.*;
+ import mindustry.world.meta.*;
+ import mindustry.world.modules.*;
++import mindustryX.events.*;
+ import mindustryX.features.*;
+ 
+ import java.util.*;
+@@ -1759,6 +1760,8 @@ abstract class BuildingComp implements Posc, Teamc, Healthc, Buildingc, Timerc,
+ 
+     /** Handles splash damage with a bullet source. */
+     public void damage(Bullet bullet, Team source, float damage){
++        HealthChangedEvent.INSTANCE.source = bullet;
++
+         damage(source, damage);
+         Events.fire(bulletDamageEvent.set(self(), bullet));
+     }
+@@ -2037,7 +2040,9 @@ abstract class BuildingComp implements Posc, Teamc, Healthc, Buildingc, Timerc,
+ 
+         //TODO handle this better on the client.
+         if(!net.client()){
+-            health -= handleDamage(damage);
++            float handledDamage = handleDamage(damage);
++
++            health -= handledDamage;
+         }
+ 
+         healthChanged();
+diff --git a/core/src/mindustry/entities/comp/HealthComp.java b/core/src/mindustry/entities/comp/HealthComp.java
+index f315b3fb753d1c2d4a2895fc27e0d06ac141b174..0ccf194df8752be9121d26ce2705f42e3cbb1cbb 100644
+--- a/core/src/mindustry/entities/comp/HealthComp.java
++++ b/core/src/mindustry/entities/comp/HealthComp.java
+@@ -3,6 +3,8 @@ package mindustry.entities.comp;
+ import arc.util.*;
+ import mindustry.annotations.Annotations.*;
+ import mindustry.gen.*;
++import mindustryX.*;
++import mindustryX.events.*;
+ 
+ @Component
+ abstract class HealthComp implements Entityc, Posc{
+@@ -12,6 +14,7 @@ abstract class HealthComp implements Entityc, Posc{
+     transient float hitTime;
+     transient float maxHealth = 1f;
+     transient boolean dead;
++    private transient float lastHealthChanged;
+ 
+     boolean isValid(){
+         return !dead && isAdded();
+@@ -42,6 +45,7 @@ abstract class HealthComp implements Entityc, Posc{
+     void heal(){
+         dead = false;
+         health = maxHealth;
++        healthChanged();
+     }
+ 
+     boolean damaged(){
+@@ -62,6 +66,8 @@ abstract class HealthComp implements Entityc, Posc{
+         if(Float.isNaN(health)) health = 0f;
+ 
+         health -= amount;
++        healthChanged();
++
+         hitTime = 1f;
+         if(health <= 0 && !dead){
+             kill();
+@@ -86,9 +92,21 @@ abstract class HealthComp implements Entityc, Posc{
+         damagePierce(amount * Time.delta, hitTime <= -20 + hitDuration);
+     }
+ 
++    @MindustryXApi
++    void healthChanged(){
++        if(lastHealthChanged!=0){
++            float delta = lastHealthChanged - health;
++            if(delta != 0){
++                HealthChangedEvent.fire(self(), delta);
++            }
++        }
++        lastHealthChanged = health;
++    }
++
+     void clampHealth(){
+         health = Math.min(health, maxHealth);
+         if(Float.isNaN(health)) health = 0f;
++        healthChanged();
+     }
+ 
+     /** Heals by a flat amount. */
+diff --git a/core/src/mindustry/entities/comp/ShieldComp.java b/core/src/mindustry/entities/comp/ShieldComp.java
+index 1e06d2950428331e65745d4821d3c53f079c75c4..9c75a01679e88b08a348edd755d612450f17e911 100644
+--- a/core/src/mindustry/entities/comp/ShieldComp.java
++++ b/core/src/mindustry/entities/comp/ShieldComp.java
+@@ -61,6 +61,9 @@ abstract class ShieldComp implements Healthc, Posc{
+ 
+         if(amount > 0 && type.killable){
+             health -= amount;
++
++            healthChanged();
++
+             if(health <= 0 && !dead){
+                 kill();
+             }

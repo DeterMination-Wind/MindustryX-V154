@@ -1,0 +1,53 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: way-zer <himc.wicp@gmail.com>
+Date: Tue, 3 Dec 2024 22:18:06 +0800
+Subject: [PATCH] =?UTF-8?q?FC:=20paste=20logicCode=20from=20schematic(?=
+ =?UTF-8?q?=E4=B8=A4=E7=A7=8D=E4=BB=8E=E8=93=9D=E5=9B=BE=E4=B8=AD=E6=8F=90?=
+ =?UTF-8?q?=E5=8F=96=E9=80=BB=E8=BE=91=E4=BB=A3=E7=A0=81=E5=BF=AB=E6=8D=B7?=
+ =?UTF-8?q?=E6=96=B9=E5=BC=8F)?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ .../ui/dialogs/SchematicsDialog.java          | 20 +++++++++++++++++++
+ 1 file changed, 20 insertions(+)
+
+diff --git a/core/src/mindustry/ui/dialogs/SchematicsDialog.java b/core/src/mindustry/ui/dialogs/SchematicsDialog.java
+index f855efcd27a47e8ac5a0ac3dffc8a3c8a8413619..aecd5fa9c1d0d9f564421c2acd57c0ed21d6fded 100644
+--- a/core/src/mindustry/ui/dialogs/SchematicsDialog.java
++++ b/core/src/mindustry/ui/dialogs/SchematicsDialog.java
+@@ -24,6 +24,8 @@ import mindustry.input.*;
+ import mindustry.type.*;
+ import mindustry.ui.*;
+ import mindustry.world.*;
++import mindustry.world.blocks.logic.*;
++import mindustry.world.blocks.logic.LogicBlock.*;
+ import mindustry.world.blocks.production.*;
+ import mindustry.world.meta.*;
+ import mindustryX.features.*;
+@@ -950,6 +952,24 @@ public class SchematicsDialog extends BaseDialog{
+                 }
+             });
+             cont.row();
++            if(schem.tiles.contains(stile -> stile.block instanceof LogicBlock)){
++                LogicBuild tmpBuild = ((LogicBlock)Blocks.logicProcessor).new LogicBuild();
++                cont.table(t -> {
++                    schem.tiles.each(stile -> {
++                        if(stile.block instanceof LogicBlock logicBlock){
++                            tmpBuild.readCompressed((byte[])stile.config,false);
++                            String codeString = tmpBuild.code;
++                            if(codeString.isEmpty()) return;
++                            t.button(logicBlock.emoji(), Styles.cleart, () -> {
++                                Core.app.setClipboardText(codeString);
++                                UIExt.announce("已复制逻辑代码");
++                            }).tooltip(Strings.truncate(codeString, 500, "\n...")).size(40f);
++                            if(t.getChildren().size % 15 == 0) t.row();
++                        }
++                    });
++                });
++                cont.row();
++            }
+             float cons = schem.powerConsumption() * 60, prod = schem.powerProduction() * 60;
+             if(!Mathf.zero(cons) || !Mathf.zero(prod)){
+                 cont.table(t -> {

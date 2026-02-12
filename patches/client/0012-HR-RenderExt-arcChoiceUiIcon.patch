@@ -1,0 +1,143 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: way-zer <himc.wicp@gmail.com>
+Date: Sat, 17 Feb 2024 13:56:18 +0800
+Subject: [PATCH] =?UTF-8?q?HR(RenderExt)=20arcChoiceUiIcon(=E6=98=BE?=
+ =?UTF-8?q?=E7=A4=BA=E9=80=89=E4=B8=AD=E7=89=A9=E5=93=81=E5=9B=BE=E6=A0=87?=
+ =?UTF-8?q?)?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ .../world/blocks/distribution/DirectionalUnloader.java      | 2 ++
+ .../src/mindustry/world/blocks/distribution/DuctRouter.java | 2 ++
+ core/src/mindustry/world/blocks/distribution/Sorter.java    | 2 ++
+ core/src/mindustry/world/blocks/sandbox/ItemSource.java     | 2 ++
+ core/src/mindustry/world/blocks/storage/Unloader.java       | 6 ++++++
+ .../mindustry/world/blocks/units/UnitCargoUnloadPoint.java  | 2 ++
+ 6 files changed, 16 insertions(+)
+
+diff --git a/core/src/mindustry/world/blocks/distribution/DirectionalUnloader.java b/core/src/mindustry/world/blocks/distribution/DirectionalUnloader.java
+index 76d6fb0ae48901fc5a3d0ea940e6d2df0b5f3dea..6b5f24ab2f1b53cab5143d030743c16efc95b9c8 100644
+--- a/core/src/mindustry/world/blocks/distribution/DirectionalUnloader.java
++++ b/core/src/mindustry/world/blocks/distribution/DirectionalUnloader.java
+@@ -14,6 +14,7 @@ import mindustry.world.blocks.*;
+ import mindustry.world.blocks.storage.CoreBlock.*;
+ import mindustry.world.blocks.storage.StorageBlock.*;
+ import mindustry.world.meta.*;
++import mindustryX.features.*;
+ 
+ import static mindustry.Vars.*;
+ 
+@@ -121,6 +122,7 @@ public class DirectionalUnloader extends Block{
+                 Draw.color(unloadItem.color);
+                 Draw.rect(centerRegion, x, y);
+                 Draw.color();
++                if(RenderExt.arcChoiceUiIcon) Draw.rect(unloadItem.fullIcon, x, y,4f,4f);
+             }else{
+                 Draw.rect(arrowRegion, x, y, rotdeg());
+             }
+diff --git a/core/src/mindustry/world/blocks/distribution/DuctRouter.java b/core/src/mindustry/world/blocks/distribution/DuctRouter.java
+index 97bef1ebe97f67b37ddc9c1fc1a83c8b7d3373a8..9920882552d131a9c8d6e6bfeb603fe56527695e 100644
+--- a/core/src/mindustry/world/blocks/distribution/DuctRouter.java
++++ b/core/src/mindustry/world/blocks/distribution/DuctRouter.java
+@@ -12,6 +12,7 @@ import mindustry.type.*;
+ import mindustry.world.*;
+ import mindustry.world.blocks.*;
+ import mindustry.world.meta.*;
++import mindustryX.features.*;
+ 
+ import static mindustry.Vars.*;
+ 
+@@ -84,6 +85,7 @@ public class DuctRouter extends Block{
+                 Draw.color(sortItem.color);
+                 Draw.rect("center", x, y);
+                 Draw.color();
++                if(RenderExt.arcChoiceUiIcon) Draw.rect(sortItem.fullIcon, x, y,4f,4f);
+             }else{
+                 Draw.rect(topRegion, x, y, rotdeg());
+             }
+diff --git a/core/src/mindustry/world/blocks/distribution/Sorter.java b/core/src/mindustry/world/blocks/distribution/Sorter.java
+index c5f8f522482a476d27ee18eb4acdc52d722eda46..716c6645e5cf90a6dd4d4ec65b48ed2ef41d7227 100644
+--- a/core/src/mindustry/world/blocks/distribution/Sorter.java
++++ b/core/src/mindustry/world/blocks/distribution/Sorter.java
+@@ -13,6 +13,7 @@ import mindustry.type.*;
+ import mindustry.world.*;
+ import mindustry.world.blocks.*;
+ import mindustry.world.meta.*;
++import mindustryX.features.*;
+ 
+ import static mindustry.Vars.*;
+ 
+@@ -78,6 +79,7 @@ public class Sorter extends Block{
+                 Draw.color(sortItem.color);
+                 Fill.square(x, y, tilesize/2f - 0.00001f);
+                 Draw.color();
++                if(RenderExt.arcChoiceUiIcon) Draw.rect(sortItem.fullIcon, x, y,4f,4f);
+             }
+ 
+             super.draw();
+diff --git a/core/src/mindustry/world/blocks/sandbox/ItemSource.java b/core/src/mindustry/world/blocks/sandbox/ItemSource.java
+index b505c5f883e4dc5453ef677005ec9955c5dc52d9..78438212a0ab63f2411928695846cc8915679cc8 100644
+--- a/core/src/mindustry/world/blocks/sandbox/ItemSource.java
++++ b/core/src/mindustry/world/blocks/sandbox/ItemSource.java
+@@ -11,6 +11,7 @@ import mindustry.type.*;
+ import mindustry.world.*;
+ import mindustry.world.blocks.*;
+ import mindustry.world.meta.*;
++import mindustryX.features.*;
+ 
+ import static mindustry.Vars.*;
+ 
+@@ -73,6 +74,7 @@ public class ItemSource extends Block{
+                 Draw.color(outputItem.color);
+                 Fill.square(x, y, tilesize/2f - 0.00001f);
+                 Draw.color();
++                if(RenderExt.arcChoiceUiIcon) Draw.rect(outputItem.fullIcon, x, y,4f,4f);
+             }
+ 
+             super.draw();
+diff --git a/core/src/mindustry/world/blocks/storage/Unloader.java b/core/src/mindustry/world/blocks/storage/Unloader.java
+index 4732141ac7518a22c20a2b1d839626ad791e51c1..03770a18b7d547279f91731837d1d653a6defcd6 100644
+--- a/core/src/mindustry/world/blocks/storage/Unloader.java
++++ b/core/src/mindustry/world/blocks/storage/Unloader.java
+@@ -18,6 +18,8 @@ import mindustry.world.meta.*;
+ 
+ import java.util.*;
+ 
++import mindustryX.features.*;
++
+ import static mindustry.Vars.*;
+ 
+ public class Unloader extends Block{
+@@ -228,6 +230,10 @@ public class Unloader extends Block{
+         public void draw(){
+             super.draw();
+ 
++            if(RenderExt.arcChoiceUiIcon && sortItem != null){
++                Draw.rect(sortItem.fullIcon, x, y,4f,4f);
++                return;
++            }
+             Draw.color(sortItem == null ? Color.clear : sortItem.color);
+             Draw.rect(centerRegion, x, y);
+             Draw.color();
+diff --git a/core/src/mindustry/world/blocks/units/UnitCargoUnloadPoint.java b/core/src/mindustry/world/blocks/units/UnitCargoUnloadPoint.java
+index b49ae76b4cd002127396b500c70c4cb1fb949f4e..612e4f724a2e0c6a2981780ddd953942704f52ba 100644
+--- a/core/src/mindustry/world/blocks/units/UnitCargoUnloadPoint.java
++++ b/core/src/mindustry/world/blocks/units/UnitCargoUnloadPoint.java
+@@ -12,6 +12,7 @@ import mindustry.type.*;
+ import mindustry.world.*;
+ import mindustry.world.blocks.*;
+ import mindustry.world.meta.*;
++import mindustryX.features.*;
+ 
+ import static mindustry.Vars.*;
+ 
+@@ -47,6 +48,7 @@ public class UnitCargoUnloadPoint extends Block{
+                 Draw.color(item.color);
+                 Draw.rect(topRegion, x, y);
+                 Draw.color();
++                if(RenderExt.arcChoiceUiIcon) Draw.rect(item.fullIcon, x, y,4f,4f);
+             }
+         }
+ 

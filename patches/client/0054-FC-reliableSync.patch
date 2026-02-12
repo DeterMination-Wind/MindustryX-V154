@@ -1,0 +1,21 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: way-zer <himc.wicp@gmail.com>
+Date: Sun, 15 Sep 2024 15:53:45 +0800
+Subject: [PATCH] FC: reliableSync
+
+---
+ core/src/mindustry/net/Net.java | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/core/src/mindustry/net/Net.java b/core/src/mindustry/net/Net.java
+index 39e9077a7db6007c85699ea987ecc04be6e2416a..0b2be4c8a299463df8b317551e272ca7cd702ce0 100644
+--- a/core/src/mindustry/net/Net.java
++++ b/core/src/mindustry/net/Net.java
+@@ -235,6 +235,7 @@ public class Net{
+                 con.send(object, reliable);
+             }
+         }else{
++            reliable |= LogicExt.reliableSync.get();
+             provider.sendClient(object, reliable);
+         }
+     }

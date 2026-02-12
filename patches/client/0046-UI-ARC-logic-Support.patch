@@ -1,0 +1,445 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: way-zer <himc.wicp@gmail.com>
+Date: Sat, 13 Jul 2024 00:12:04 +0800
+Subject: [PATCH] =?UTF-8?q?UI&ARC:=20logic=20Support=20=E5=A4=84=E7=90=86?=
+ =?UTF-8?q?=E5=99=A8=E7=BC=96=E8=BE=91=E5=A2=9E=E5=BC=BA?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+* 从Merged分离
+* 修复注释切换功能；整理代码
+* 实现JUMP跳转按钮
+way-zer <himc.wicp@gmail.com> on 2024/7/13
+
+重制内存元显示 和 处理器快捷显示
+way-zer <himc.wicp@gmail.com> on 2024/7/14
+
+防止多人模式下编辑世处，并给出提示
+way-zer <himc.wicp@gmail.com> on 2024/9/8
+
+clean
+
+调整Jump样式，添加跳转强调
+
+按钮调整
+MinRi2 <2275045670@qq.com>
+
+* 添加失效链接显示
+* 清除链接建筑时更新逻辑代码
+MinRi2 <2275045670@qq.com> on 2025/5/3
+---
+ core/src/mindustry/logic/LCanvas.java         | 48 ++++++++++++++++++-
+ core/src/mindustry/logic/LExecutor.java       |  7 ++-
+ core/src/mindustry/logic/LStatements.java     | 27 +++++++++++
+ core/src/mindustry/logic/LogicDialog.java     | 19 ++++++--
+ .../world/blocks/logic/LogicBlock.java        | 39 +++++++++++----
+ .../world/blocks/logic/MemoryBlock.java       | 26 +++++++++-
+ 6 files changed, 149 insertions(+), 17 deletions(-)
+
+diff --git a/core/src/mindustry/logic/LCanvas.java b/core/src/mindustry/logic/LCanvas.java
+index 74fb32ff56eec0fcf565cb7cf7aedf1335c978cc..39f29b027fe979cea410e52b2b8cd695d1c60211 100644
+--- a/core/src/mindustry/logic/LCanvas.java
++++ b/core/src/mindustry/logic/LCanvas.java
+@@ -18,6 +18,9 @@ import mindustry.gen.*;
+ import mindustry.graphics.*;
+ import mindustry.logic.LStatements.*;
+ import mindustry.ui.*;
++import mindustryX.*;
++import mindustryX.features.*;
++import mindustryX.features.ui.*;
+ 
+ public class LCanvas extends Table{
+     private static final Seq<JumpCurve> tmpOccupiers1 = new Seq<>();
+@@ -61,7 +64,7 @@ public class LCanvas extends Table{
+ 
+     /** @return if statement elements should have rows. */
+     public static boolean useRows(){
+-        return Core.graphics.getWidth() < Scl.scl(900f) * 1.2f;
++        return Core.graphics.getWidth() - (LogicSupport.visible.get() ? 400f : 0f) < Scl.scl(900f) * 1.2f;
+     }
+ 
+     public static void tooltip(Cell<?> cell, String key){
+@@ -444,11 +447,13 @@ public class LCanvas extends Table{
+                 t.button(Icon.copy, Styles.logici, () -> {
+                 }).size(24f).padRight(6).get().tapped(this::copy);
+ 
++                t.button(st instanceof PrintStatement ? Icon.fileText : Icon.pencil, Styles.logici, this::toggleComment).size(24f).padRight(6);
++
+                 t.button(Icon.cancel, Styles.logici, () -> {
+                     remove();
+                     dragging = null;
+                     statements.updateJumpHeights = true;
+-                }).size(24f);
++                }).size(24f).padLeft(Vars.mobile?48:0);
+ 
+                 t.addListener(new InputListener(){
+                     float lastx, lasty;
+@@ -529,6 +534,45 @@ public class LCanvas extends Table{
+             }
+         }
+ 
++        //原始作者: LC
++        @MindustryXApi
++        public void toggleComment(){
++            StatementElem newElem;
++            if(st instanceof PrintStatement pst && !pst.value.isEmpty()){ //print->代码
++                String code = pst.value.replace("_", " ");
++                Seq<LStatement> lsStatement = LAssembler.read(code, privileged);
++                LStatement stNew = lsStatement.first();
++                if(stNew instanceof InvalidStatement){
++                    UIExt.announce("[orange]警告：转换失败，请输入正确格式");
++                    return;
++                }
++                newElem = new StatementElem(stNew);
++            }else{  //代码->print
++                st.saveUI();
++                StringBuilder thisText = new StringBuilder();
++                LogicIO.write(st, thisText);
++                var stNew = new PrintStatement();
++                stNew.value = thisText.toString().replace(' ','_');
++                newElem = new StatementElem(stNew);
++            }
++            for(Element c : statements.getChildren()){
++                if(c instanceof StatementElem ste && ste.st instanceof JumpStatement jst && (jst.dest == null || jst.dest == st.elem)){
++                    if(0 > jst.destIndex || jst.destIndex >= statements.getChildren().size) continue;
++                    jst.saveUI();
++                }
++            }
++            statements.addChildBefore(this, newElem);
++            remove();
++            for(Element c : statements.getChildren()){
++                if(c instanceof StatementElem ste && ste.st instanceof JumpStatement jst && (jst.dest == null || jst.dest == st.elem)){
++                    if(0 > jst.destIndex || jst.destIndex >= statements.getChildren().size) continue;
++                    jst.setupUI();
++                }
++            }
++            newElem.st.setupUI();
++        }
++
++
+         @Override
+         public void draw(){
+             float pad = 5f;
+diff --git a/core/src/mindustry/logic/LExecutor.java b/core/src/mindustry/logic/LExecutor.java
+index 56fd115ca7a426c67be8477f622fd907c5c68592..7fcdd08fe98b0de48c0a83e1e4c1877760160b21 100644
+--- a/core/src/mindustry/logic/LExecutor.java
++++ b/core/src/mindustry/logic/LExecutor.java
+@@ -44,6 +44,9 @@ public class LExecutor{
+     public LInstruction[] instructions = {};
+     /** Non-constant variables used for network sync */
+     public LVar[] vars = {};
++    /** All variables including constant */
++    @mindustryX.MindustryXApi
++    public LVar[] allVars = {};
+ 
+     public LVar counter, unit, thisv, ipt;
+ 
+@@ -96,6 +99,7 @@ public class LExecutor{
+     public void load(LAssembler builder){
+         nameMap = null;
+         vars = builder.vars.values().toSeq().retainAll(var -> !var.constant).toArray(LVar.class);
++        allVars = builder.vars.values().toSeq().toArray(LVar.class);
+         for(int i = 0; i < vars.length; i++){
+             vars[i].id = i;
+         }
+@@ -530,6 +534,7 @@ public class LExecutor{
+         public void run(LExecutor exec){
+             Object obj = target.obj();
+             if(obj instanceof Building b && (exec.privileged || (exec.build != null && exec.build.validLink(b)))){
++                b.lastLogicController = exec.build;
+ 
+                 if(type == LAccess.enabled){
+                     if(p1.bool()){
+@@ -1264,7 +1269,7 @@ public class LExecutor{
+         @Override
+         public void run(LExecutor exec){
+             if(headless) return;
+-
++            if(Core.settings.getBool("removeLogicLock"))return;
+             switch(action){
+                 case pan -> {
+                     control.input.logicCutscene = true;
+diff --git a/core/src/mindustry/logic/LStatements.java b/core/src/mindustry/logic/LStatements.java
+index c230ed1f4732f74fea8ee859c0f6eda415ce9c71..237e02bcac78fdb6a39e3c9bc0c54637a2ea968b 100644
+--- a/core/src/mindustry/logic/LStatements.java
++++ b/core/src/mindustry/logic/LStatements.java
+@@ -3,6 +3,9 @@ package mindustry.logic;
+ import arc.*;
+ import arc.func.*;
+ import arc.graphics.*;
++import arc.math.*;
++import arc.scene.*;
++import arc.scene.actions.*;
+ import arc.scene.style.*;
+ import arc.scene.ui.*;
+ import arc.scene.ui.layout.*;
+@@ -21,6 +24,7 @@ import mindustry.ui.*;
+ import mindustry.world.*;
+ import mindustry.world.meta.*;
+ import mindustryX.*;
++import mindustryX.features.*;
+ 
+ import static mindustry.Vars.*;
+ import static mindustry.logic.LCanvas.*;
+@@ -1012,6 +1016,29 @@ public class LStatements{
+             table.table(this::rebuild);
+ 
+             table.add().growX();
++            if(!mobile || !Core.graphics.isPortrait()){
++                table.button("JUMP", Styles.grayt, () -> {
++                    if(dest == null) return;
++                    //table, elem, dragLayout, table(y), scrollPane
++                    var canvas = dest.parent.parent;
++                    var scroll = (ScrollPane)canvas.parent;
++                    scroll.setScrollY(scroll.getMaxY() - dest.y + scroll.getHeight() * 0.5f);
++                    saveUI();
++                    UIExt.announce("[gold]跳转行号:[] " + destIndex);
++
++                    Element header = dest.getChildren().first();
++                    dest.clearActions();
++                    header.clearActions();
++                    dest.addAction(Actions.repeat(2, Actions.sequence(
++                    Actions.color(Pal.placing, 0.5f, Interp.smooth),
++                    Actions.color(dest.st.category().color, 0.5f, Interp.smooth)
++                    )));
++                    header.addAction(Actions.repeat(2, Actions.sequence(
++                    Actions.color(Pal.placing, 0.5f, Interp.smooth),
++                    Actions.color(dest.st.category().color, 0.5f, Interp.smooth)
++                    )));
++                }).width(80f);
++            }
+             table.add(new JumpButton(() -> dest, s -> dest = s, this.elem)).size(30).right().padLeft(-8);
+ 
+             String name = name();
+diff --git a/core/src/mindustry/logic/LogicDialog.java b/core/src/mindustry/logic/LogicDialog.java
+index 38211fd1ab47dbc60f7c3871284e79c595de4e6c..6c1b8a57d7206ec6d9f5909613ebf202b29931aa 100644
+--- a/core/src/mindustry/logic/LogicDialog.java
++++ b/core/src/mindustry/logic/LogicDialog.java
+@@ -19,6 +19,8 @@ import mindustry.logic.LStatements.*;
+ import mindustry.ui.*;
+ import mindustry.ui.dialogs.*;
+ import mindustry.world.blocks.logic.*;
++import mindustryX.*;
++import mindustryX.features.ui.*;
+ 
+ import java.util.*;
+ 
+@@ -31,7 +33,7 @@ public class LogicDialog extends BaseDialog{
+     boolean privileged;
+     @Nullable LExecutor executor;
+     GlobalVarsDialog globalsDialog = new GlobalVarsDialog();
+-    boolean wasRows, wasPortrait, forceRestart;
++    boolean wasRows, wasPortrait, forceRestart, noSave;
+ 
+     public LogicDialog(){
+         super("logic");
+@@ -48,7 +50,12 @@ public class LogicDialog extends BaseDialog{
+             wasRows = LCanvas.useRows();
+             wasPortrait = Core.graphics.isPortrait();
+         });
+-        hidden(() -> consumer.get(canvas.save()));
++        hidden(() -> {
++            if(!noSave){
++                consumer.get(canvas.save());
++            } else {
++                noSave = false;
++            }});
+         onResize(() -> {
+             if(wasRows != LCanvas.useRows() || wasPortrait != Core.graphics.isPortrait()){
+                 setup();
+@@ -149,7 +156,12 @@ public class LogicDialog extends BaseDialog{
+                         dialog.hide();
+                         hide();
+                     }).marginLeft(12f);
+-
++                    t.row();
++                    t.button("[orange]丢弃更改", Icon.cancel,style, () -> ui.showConfirm("确认丢弃?", () -> {
++                        noSave = true;
++                        dialog.hide();
++                        hide();
++                    })).marginLeft(12f);
+                 });
+             });
+ 
+@@ -364,6 +376,7 @@ public class LogicDialog extends BaseDialog{
+             }
+         };
+ 
++        LogicSupport.build(canvas, executor, modified);
+         show();
+     }
+ }
+diff --git a/core/src/mindustry/world/blocks/logic/LogicBlock.java b/core/src/mindustry/world/blocks/logic/LogicBlock.java
+index 2a8175d97b75b28648f96f62afbc5eebd6976f4c..e9e0f4f58deaff0e2ba46fdc84ec0378c12af01e 100644
+--- a/core/src/mindustry/world/blocks/logic/LogicBlock.java
++++ b/core/src/mindustry/world/blocks/logic/LogicBlock.java
+@@ -16,17 +16,21 @@ import arc.util.io.*;
+ import arc.util.pooling.*;
+ import mindustry.ai.types.*;
+ import mindustry.core.*;
++import mindustry.game.*;
+ import mindustry.gen.*;
+ import mindustry.graphics.*;
+ import mindustry.io.*;
+ import mindustry.io.TypeIO.*;
+ import mindustry.logic.*;
+ import mindustry.ui.*;
++import mindustry.ui.dialogs.*;
+ import mindustry.world.*;
+ import mindustry.world.blocks.ConstructBlock.*;
+ import mindustry.world.meta.*;
+ import mindustryX.*;
+ import mindustryX.events.*;
++import mindustryX.features.*;
++import mindustryX.features.ui.*;
+ 
+ import java.io.*;
+ import java.util.zip.*;
+@@ -107,11 +111,15 @@ public class LogicBlock extends Block{
+ 
+     @Override
+     public boolean checkForceDark(Tile tile){
+-        return !accessible();
++        return !accessibleRead();
+     }
+ 
+     public boolean accessible(){
+-        return !privileged || state.rules.editor || state.playtestingMap != null || state.rules.allowEditWorldProcessors;
++        return !privileged || state.rules.editor || state.playtestingMap != null || state.rules.allowEditWorldProcessors || RenderExt.editOtherBlock;
++    }
++
++    private boolean accessibleRead(){
++        return accessible() || RenderExt.showOtherInfo;
+     }
+ 
+     @Override
+@@ -422,7 +430,7 @@ public class LogicBlock extends Block{
+ 
+         @Override
+         public boolean displayable(){
+-            return accessible();
++            return accessibleRead();
+         }
+ 
+         @Override
+@@ -445,7 +453,12 @@ public class LogicBlock extends Block{
+ 
+         @Override
+         public Cursor getCursor(){
+-            return !accessible() ? SystemCursor.arrow : super.getCursor();
++            return !accessibleRead() ? SystemCursor.arrow : super.getCursor();
++        }
++
++        @Override
++        public boolean interactable(Team team){
++            return super.interactable(team) || RenderExt.showOtherInfo;
+         }
+ 
+         //logic blocks cause write problems when picked up
+@@ -604,24 +617,30 @@ public class LogicBlock extends Block{
+             }
+ 
+             for(LogicLink l : links){
+-                Building build = world.build(l.x, l.y);
+-                if(validLink(build)){
++                Tile tile = world.tile(l.x, l.y);
++                if(tile == null) continue;
++                Building build = tile.build;
++                if(!validLink(build)){
++                    Drawf.square(tile.drawx(), tile.drawy(), tilesize / 2f + 1f, Tmp.c1.set(Pal.noplace).a(0.8f));
++                }else{
+                     Drawf.square(build.x, build.y, build.block.size * tilesize / 2f + 1f, Pal.place);
+                 }
+             }
+ 
+             //draw top text on separate layer
++            //draw link order
++            int i = 0;
+             for(LogicLink l : links){
+                 Building build = world.build(l.x, l.y);
+                 if(validLink(build)){
+-                    build.block.drawPlaceText(l.name, build.tileX(), build.tileY(), true);
++                    build.block.drawPlaceText(l.name + "[" + i++ + "]", build.tileX(), build.tileY(), true);
+                 }
+             }
+         }
+ 
+         @Override
+         public void drawSelect(){
+-            if(!accessible()) return;
++            if(!accessibleRead()) return;
+ 
+             Groups.unit.each(u -> u.controller() instanceof LogicAI ai && ai.controller == this, unit -> {
+                 Drawf.square(unit.x, unit.y, unit.hitSize, unit.rotation + 45);
+@@ -668,12 +687,12 @@ public class LogicBlock extends Block{
+ 
+         @Override
+         public boolean shouldShowConfigure(Player player){
+-            return accessible();
++            return accessibleRead();
+         }
+ 
+         @Override
+         public void buildConfiguration(Table table){
+-            table.button(Icon.pencil, Styles.cleari, this::showEditDialog).size(40);
++            LogicSupport.buildLogicTools(table, this);
+         }
+ 
+         public void showEditDialog(){
+diff --git a/core/src/mindustry/world/blocks/logic/MemoryBlock.java b/core/src/mindustry/world/blocks/logic/MemoryBlock.java
+index 84a9b208bebcc2de36a311286883ed98910c2add..db65243121ae1c51069028982b3201b458bafb49 100644
+--- a/core/src/mindustry/world/blocks/logic/MemoryBlock.java
++++ b/core/src/mindustry/world/blocks/logic/MemoryBlock.java
+@@ -1,12 +1,15 @@
+ package mindustry.world.blocks.logic;
+ 
++import arc.scene.ui.layout.*;
+ import arc.util.io.*;
+ import mindustry.gen.*;
+ import mindustry.logic.*;
+ import mindustry.world.*;
+ import mindustry.world.meta.*;
++import mindustryX.features.*;
++import mindustryX.features.ui.*;
+ 
+-import static mindustry.Vars.*;
++import static mindustry.Vars.state;
+ 
+ public class MemoryBlock extends Block{
+     public int memoryCapacity = 32;
+@@ -19,6 +22,7 @@ public class MemoryBlock extends Block{
+         drawDisabled = false;
+         envEnabled = Env.any;
+         canOverdrive = false;
++        configurable = true;
+     }
+ 
+     @Override
+@@ -104,6 +108,26 @@ public class MemoryBlock extends Block{
+             }
+         }
+ 
++        @Override
++        public boolean onConfigureBuildTapped(Building other){
++            if(this == other || !accessible()){
++                deselect();
++                return false;
++            }
++            return super.onConfigureBuildTapped(other);
++        }
++
++        @Override
++        public void buildConfiguration(Table table){
++            if(!RenderExt.showOtherInfo && !accessible()){
++                //go away
++                deselect();
++                return;
++            }
++
++            LogicSupport.buildMemoryTools(table, this);
++        }
++
+         @Override
+         public void read(Reads read, byte revision){
+             super.read(read, revision);

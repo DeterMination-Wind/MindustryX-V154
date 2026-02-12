@@ -1,0 +1,266 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: way-zer <himc.wicp@gmail.com>
+Date: Fri, 17 May 2024 23:32:18 +0800
+Subject: [PATCH] =?UTF-8?q?C:=20Editor=E5=A2=9E=E5=BC=BA?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+从ARC分离，WZ重制
+---
+ core/src/mindustry/editor/EditorTool.java     |  5 ++-
+ core/src/mindustry/editor/MapEditor.java      |  9 ++++--
+ .../src/mindustry/editor/MapEditorDialog.java | 28 +++++++++++-----
+ .../src/mindustry/editor/MapResizeDialog.java |  4 +--
+ core/src/mindustry/editor/MapView.java        | 32 +++++++++++++++----
+ core/src/mindustry/ui/GridImage.java          |  5 +--
+ 6 files changed, 60 insertions(+), 23 deletions(-)
+
+diff --git a/core/src/mindustry/editor/EditorTool.java b/core/src/mindustry/editor/EditorTool.java
+index eac257b3c5238a61b13afce11f26bdc3eb603d79..dde3985967815a41c6240c83d57755aafed2ca04 100644
+--- a/core/src/mindustry/editor/EditorTool.java
++++ b/core/src/mindustry/editor/EditorTool.java
+@@ -49,7 +49,7 @@ public enum EditorTool{
+             });
+         }
+     },
+-    pencil(KeyCode.b, "replace", "square", "drawteams", "underliquid"){
++    pencil(KeyCode.b, "replace", "square", "drawteams", "underliquid", "square2"){
+         {
+             edit = true;
+             draggable = true;
+@@ -71,6 +71,9 @@ public enum EditorTool{
+                 editor.drawCircle(x, y, tile -> tile.setTeam(editor.drawTeam));
+             }else if(mode == 3 && !(editor.drawBlock instanceof Floor f && f.isLiquid)){
+                 editor.drawBlocks(x, y, false, true, tile -> tile.floor().isLiquid);
++            }else if(mode == 4){
++                editor.diamMode = true;
++                editor.drawBlocks(x, y, true, false, tile -> true);
+             }
+ 
+         }
+diff --git a/core/src/mindustry/editor/MapEditor.java b/core/src/mindustry/editor/MapEditor.java
+index c2529b8c38ac57244517823aa73843cedec75602..b768477389731aefad275b3c6aa1760e20a4cc35 100644
+--- a/core/src/mindustry/editor/MapEditor.java
++++ b/core/src/mindustry/editor/MapEditor.java
+@@ -29,7 +29,9 @@ public class MapEditor{
+     private boolean loading;
+ 
+     public float brushSize = 1;
++    public int interval = 25;
+     public int rotation;
++    public boolean diamMode; // only use in drawSquare now, set each time before draw
+     public Block drawBlock = Blocks.stone;
+     public Team drawTeam = Team.sharded;
+     public boolean showTerrain = true, showFloor = true, showBuildings = true;
+@@ -287,9 +289,10 @@ public class MapEditor{
+     }
+ 
+     public void drawSquare(int x, int y, Cons<Tile> drawer){
+-        int clamped = (int)brushSize;
+-        for(int rx = -clamped; rx <= clamped; rx++){
+-            for(int ry = -clamped; ry <= clamped; ry++){
++        int clamped = (int)(brushSize * (diamMode ? 1 : 2)) - 1;
++        diamMode = false;
++        for(int rx = -clamped / 2; rx <= clamped - clamped / 2; rx++){
++            for(int ry = -clamped / 2; ry <= clamped - clamped / 2; ry++){
+                 int wx = x + rx, wy = y + ry;
+ 
+                 if(wx < 0 || wy < 0 || wx >= width() || wy >= height()){
+diff --git a/core/src/mindustry/editor/MapEditorDialog.java b/core/src/mindustry/editor/MapEditorDialog.java
+index 49fe8dddaf6a14d47a6a8aec28ea16798f253ee7..0910b33d4b97886c5c6333b0235794e89f32da8f 100644
+--- a/core/src/mindustry/editor/MapEditorDialog.java
++++ b/core/src/mindustry/editor/MapEditorDialog.java
+@@ -31,6 +31,7 @@ import mindustry.world.blocks.environment.*;
+ import mindustry.world.blocks.storage.*;
+ import mindustry.world.blocks.storage.CoreBlock.*;
+ import mindustry.world.meta.*;
++import mindustryX.features.*;
+ 
+ import static mindustry.Vars.*;
+ 
+@@ -657,10 +658,7 @@ public class MapEditorDialog extends Dialog implements Disposable{
+ 
+                 tools.image(Tex.whiteui, Pal.gray).colspan(3).height(4f).width(size * 3f + 3f).row();
+ 
+-                ButtonGroup<ImageButton> teamgroup = new ButtonGroup<>();
+-
+                 int i = 0;
+-
+                 for(Team team : Team.baseTeams){
+                     ImageButton button = new ImageButton(Tex.whiteui, Styles.clearNoneTogglei);
+                     button.margin(4f);
+@@ -668,19 +666,34 @@ public class MapEditorDialog extends Dialog implements Disposable{
+                     button.getStyle().imageUpColor = team.color;
+                     button.clicked(() -> editor.drawTeam = team);
+                     button.update(() -> button.setChecked(editor.drawTeam == team));
+-                    teamgroup.add(button);
+                     tools.add(button);
+ 
+                     if(i++ % 3 == 2) tools.row();
+                 }
++                tools.button("[violet]其他队伍", Styles.flatToggleMenut, () -> UIExt.teamSelect.pickOne(team -> editor.drawTeam = team))
++                .update(b->{
++                    boolean checked = !Seq.with(Team.baseTeams).contains(editor.drawTeam);
++                    b.setColor(checked ? editor.drawTeam.color : Color.violet);
++                    b.setChecked(checked);
++                }).colspan(3).size(size * 3f, size / 2);
+ 
+                 mid.add(tools).top().padBottom(-6);
+ 
+                 mid.row();
+ 
++                mid.table(t -> {
++                    t.add("辅助线：");
++                    t.field(Integer.toString(editor.interval), TextField.TextFieldFilter.digitsOnly, value -> editor.interval = Integer.parseInt(value))
++                    .valid(Strings::canParsePositiveInt).maxTextLength(4).width(100f);
++                }).row();
++
++                var brushField = mid.table().get()
++                .add("笔刷：").getTable()
++                .field(Float.toString(editor.brushSize), value -> editor.brushSize = Float.parseFloat(value)).valid(Strings::canParsePositiveFloat).maxTextLength(4).width(100f).get();
++                mid.row();
+                 mid.table(Tex.underline, t -> {
+                     Slider slider = new Slider(0, MapEditor.brushSizes.length - 1, 1, false);
+-                    slider.moved(f -> editor.brushSize = MapEditor.brushSizes[(int)f]);
++                    slider.moved(f -> {editor.brushSize = MapEditor.brushSizes[(int)f];brushField.setText(Float.toString(editor.brushSize));});
+                     for(int j = 0; j < MapEditor.brushSizes.length; j++){
+                         if(MapEditor.brushSizes[j] == editor.brushSize){
+                             slider.setValue(j);
+@@ -835,6 +848,7 @@ public class MapEditorDialog extends Dialog implements Disposable{
+         });
+ 
+         int i = 0;
++        int perRow = mobile ? 4 : 6 + mindustryX.VarsX.additionInventoryColumns.get();
+ 
+         for(Block block : blocksOut){
+             TextureRegion region = block.uiIcon;
+@@ -853,9 +867,7 @@ public class MapEditorDialog extends Dialog implements Disposable{
+ 
+             if(i == 0) editor.drawBlock = block;
+ 
+-            int cols = mobile ? 4 : 6;
+-
+-            if(++i % cols == 0){
++            if(++i % perRow == 0){
+                 blockSelection.row();
+             }
+         }
+diff --git a/core/src/mindustry/editor/MapResizeDialog.java b/core/src/mindustry/editor/MapResizeDialog.java
+index 7a5c15ce71ac487492b0685e7cc99d061bae5b76..531e545323ec177de4a0ae29a2986dfaeb898402 100644
+--- a/core/src/mindustry/editor/MapResizeDialog.java
++++ b/core/src/mindustry/editor/MapResizeDialog.java
+@@ -9,7 +9,7 @@ import mindustry.ui.dialogs.*;
+ import static mindustry.Vars.*;
+ 
+ public class MapResizeDialog extends BaseDialog{
+-    public static int minSize = 50, maxSize = 600, increment = 50;
++    public static int minSize = 10, maxSize = 9999, increment = 50;
+ 
+     int width, height, shiftX, shiftY;
+ 
+@@ -31,7 +31,7 @@ public class MapResizeDialog extends BaseDialog{
+                 table.field((w ? width : height) + "", TextFieldFilter.digitsOnly, value -> {
+                     int val = Integer.parseInt(value);
+                     if(w) width = val; else height = val;
+-                }).valid(value -> Strings.canParsePositiveInt(value) && Integer.parseInt(value) <= maxSize && Integer.parseInt(value) >= minSize).maxTextLength(3);
++                }).valid(value -> Strings.canParsePositiveInt(value) && Integer.parseInt(value) <= maxSize && Integer.parseInt(value) >= minSize).maxTextLength(4);
+ 
+                 table.row();
+             }
+diff --git a/core/src/mindustry/editor/MapView.java b/core/src/mindustry/editor/MapView.java
+index e03035023877c8c13f92e7cf2c630c43014f3212..ad9234fb96c25c222811da3050e332f5e1854b74 100644
+--- a/core/src/mindustry/editor/MapView.java
++++ b/core/src/mindustry/editor/MapView.java
+@@ -255,6 +255,11 @@ public class MapView extends Element implements GestureListener{
+         if(grid){
+             Draw.color(Color.gray);
+             image.setBounds(centerx - sclwidth / 2, centery - sclheight / 2, sclwidth, sclheight);
++            image.interval = 1;
++            image.draw();
++
++            Draw.color(Color.cyan, 0.5f);
++            image.interval = editor.interval;
+             image.draw();
+ 
+             Lines.stroke(2f);
+@@ -269,16 +274,27 @@ public class MapView extends Element implements GestureListener{
+             Lines.line(centerx - sclwidth/2f, centery, centerx + sclwidth/2f, centery);
+             Lines.line(centerx, centery - sclheight/2f, centerx, centery + sclheight/2f);
+ 
++            float diagonal = Math.max(sclwidth / 2f, sclheight / 2f);
++            Draw.color(Color.orange, 0.5f);
++            Lines.line(centerx - diagonal, centery - diagonal, centerx + diagonal, centery + diagonal);
++            Lines.line(centerx - diagonal, centery + diagonal, centerx + diagonal, centery - diagonal);
++
+             Draw.reset();
+         }
+ 
+-        int index = 0;
++        Vec2[] brush = null;
+         for(int i = 0; i < MapEditor.brushSizes.length; i++){
+             if(editor.brushSize == MapEditor.brushSizes[i]){
+-                index = i;
++                brush = brushPolygons[i];
+                 break;
+             }
+         }
++        //MDTX: 学术端的任意大小笔刷功能
++        if(brush == null){
++            float bSize = editor.brushSize;
++            float mod = bSize % 1f;
++            brush = Geometry.pixelCircle(bSize, (index, x, y) -> Mathf.dst(x, y, index - mod, index - mod) <= bSize - 0.5f);
++        }
+ 
+         float scaling = zoom * Math.min(width, height) / editor.width();
+ 
+@@ -291,8 +307,8 @@ public class MapView extends Element implements GestureListener{
+                 float sx = v1.x, sy = v1.y;
+                 Vec2 v2 = unproject(lastx, lasty).add(x, y);
+ 
+-                Lines.poly(brushPolygons[index], sx, sy, scaling);
+-                Lines.poly(brushPolygons[index], v2.x, v2.y, scaling);
++                Lines.poly(brush, sx, sy, scaling);
++                Lines.poly(brush, v2.x, v2.y, scaling);
+             }
+ 
+             if((tool.edit || (tool == EditorTool.line && !drawing)) && (!mobile || drawing)){
+@@ -300,10 +316,12 @@ public class MapView extends Element implements GestureListener{
+                 Vec2 v = unproject(p.x, p.y).add(x, y);
+ 
+                 //pencil square outline
+-                if(tool == EditorTool.pencil && tool.mode == 1){
+-                    Lines.square(v.x + scaling/2f, v.y + scaling/2f, scaling * ((editor.brushSize == 1.5f ? 1f : editor.brushSize) + 0.5f));
++                if(tool == EditorTool.pencil && (tool.mode == 1 || tool.mode == 4)){
++                    int brushSize = (int)(editor.brushSize * (tool.mode == 1 ? 2 : 1));
++                    float corr = ((brushSize % 2) == 0) ? 0f : scaling / 2f;//whether in the center of tile
++                    Lines.square(v.x + corr, v.y + corr, scaling * brushSize / 2);
+                 }else{
+-                    Lines.poly(brushPolygons[index], v.x, v.y, scaling);
++                    Lines.poly(brush, v.x, v.y, scaling);
+                 }
+             }
+         }else{
+diff --git a/core/src/mindustry/ui/GridImage.java b/core/src/mindustry/ui/GridImage.java
+index f80262d5ac469cfb71659def42077d47db38e971..f3ae89881256ad8ade8e4a570c941c5a372f26ef 100644
+--- a/core/src/mindustry/ui/GridImage.java
++++ b/core/src/mindustry/ui/GridImage.java
+@@ -5,6 +5,7 @@ import arc.scene.*;
+ 
+ public class GridImage extends Element{
+     private int imageWidth, imageHeight;
++    public int interval = 1;
+ 
+     public GridImage(int w, int h){
+         this.imageWidth = w;
+@@ -19,8 +20,8 @@ public class GridImage extends Element{
+ 
+         int minspace = 10;
+ 
+-        int jumpx = (int)(Math.max(minspace, xspace) / xspace);
+-        int jumpy = (int)(Math.max(minspace, yspace) / yspace);
++        int jumpx = (int)(Math.max(minspace, xspace * interval) / xspace);
++        int jumpy = (int)(Math.max(minspace, yspace * interval) / yspace);
+ 
+         for(int x = 0; x <= imageWidth; x += jumpx){
+             Fill.crect((int)(this.x + xspace * x - s), y - s, 2, getHeight() + (x == imageWidth ? 1 : 0));

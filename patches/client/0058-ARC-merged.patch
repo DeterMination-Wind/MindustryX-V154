@@ -1,0 +1,2574 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: way-zer <himc.wicp@gmail.com>
+Date: Wed, 24 Jan 2024 15:39:50 +0800
+Subject: [PATCH] ARC merged
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Way-Zer:
+removed: LabelController,ARCChat,QuickCameraTable,changelogreaded, UpdateDialog, 主页标语(联网), 学术日报, 热更新(无效), 检查更新, arcPlayerEffect(VIP), District(区域规划器)
+remove WindowManager.java
+还原maxSchematicSize设置，优化ARCUnits
+remove NumberFormat(已替代)
+PICK 9eaa74b9 优化单位绘图执行逻辑，减少性能开销。同时不开启显示其他队伍状态时不绘制任何单位信息（除了碰撞箱）
+  Lucky Clover <jmj18795967847@gmail.com> on 2024/2/29 at 10:09
+
+MinRi2: improve drawText;PausedDialog重排
+
+Cong0707: remove AboutCN_ARC
+
+单位能力显示 优化
+way-zer <himc.wicp@gmail.com> on 2024/4/18 at 23:22
+
+remove getThemeColor()
+way-zer <himc.wicp@gmail.com> on 2024/4/20 at 22:06
+
+波次信息面板自动失焦;面板挤长ui
+7c336939 MinRi2 <2275045670@qq.com> on 2024/4/20 at 22:25
+
+* remove "selectTeam"(功能与工具箱重复)
+* 移动QuickTool
+* 清理ARCUI
+way-zer <himc.wicp@gmail.com> on 2024/4/29
+
+* remove "fontSize"
+* remove "USIDDialog"(usid管理器)
+* remove "AchievementsDialog"(学术成就)
+* clean JoinDialog
+* clean Block.drawPurePlaceText and Block.drawText
+* 整理ARCBuilds ARCUnits 外部调用
+way-zer <himc.wicp@gmail.com> on 2024/5/4
+
+* fix "alwaysShowUnitRTSAi"
+* KeyCode.unknown -> unset
+* "@sectors.production" bug
+* revert MenuFragment "discord and mobile info" button.
+* fix about "unitTrans"
+* 重制编辑器功能，修复错误的辅助线实现
+way-zer <himc.wicp@gmail.com> on 2024/5/11
+
+* clean "arcdrillmode"
+* 还原unitHide实现;修复"showMineBeam"实现
+* 从ARC同步MusicDialog(API更新)
+* 重制炮台子弹范围显示
+* arcSetCamera -> control.input.panCamera
+way-zer <himc.wicp@gmail.com> on 2024/5/19
+
+remove blockDrop and minimapTools(小地图工具)
+way-zer <himc.wicp@gmail.com> on 2024/6/10 at 14:27
+
+* remove arcChatPicture(图片分享) and MusicDialog(松鼠音乐)
+* clean about `Format.duration` and `MessageDialog.share`
+* clean about `ARCUI.arcInfo`
+* split MessageDialog and clean ARCUI
+* clean ARCVars
+way-zer <himc.wicp@gmail.com> on 2024/6/14
+
+* move package
+* clean DrawUtilities
+way-zer <himc.wicp@gmail.com> on 2024/6/15
+
+clean PowerInfo, ArcMessageDialog, BlockSelectDialog, ItemImage
+way-zer <himc.wicp@gmail.com> on 2024/6/30
+
+remove minimap.forceShowPlayer, minimap.unitDetailsIcon, 左键切换视角(原版已实现右键切视角)
+way-zer <himc.wicp@gmail.com> on 2024/7/2
+
+* 修复BE版指挥菜单错乱
+* 移除多余小地图按钮
+way-zer <himc.wicp@gmail.com> on 2024/7/13
+
+* fix no uiIcon
+* remove menuFlyers
+way-zer <himc.wicp@gmail.com> on 2024/7/13
+
+* 整理PlayerListFragment
+* fix #CN-ARC/Mindustry-CN-ARC:85
+way-zer <himc.wicp@gmail.com> on 2024/7/28
+
+* 清理Input相关，移除autoAim(无意义)
+* 分离创世神和解禁相关
+* 整理美化 PlacementFragment
+* 更改开雾功能实现
+way-zer <himc.wicp@gmail.com> on 2024/9/8
+---
+ core/src/mindustry/editor/MapInfoDialog.java  |   7 +-
+ .../mindustry/entities/comp/BuildingComp.java |  18 +-
+ .../mindustry/entities/comp/ShieldComp.java   |  10 +
+ .../mindustry/entities/comp/StatusComp.java   |   3 +
+ core/src/mindustry/game/Schematic.java        | 104 +++++++++
+ .../src/mindustry/graphics/BlockRenderer.java |  17 +-
+ .../mindustry/graphics/OverlayRenderer.java   |  36 +++-
+ core/src/mindustry/input/DesktopInput.java    |  12 +-
+ core/src/mindustry/input/InputHandler.java    |  47 +++-
+ core/src/mindustry/input/MobileInput.java     |   6 +-
+ core/src/mindustry/logic/LExecutor.java       |  11 +-
+ core/src/mindustry/type/UnitType.java         | 101 +++++++--
+ core/src/mindustry/type/Weapon.java           |  19 ++
+ core/src/mindustry/ui/Fonts.java              |   2 +-
+ .../ui/dialogs/ContentInfoDialog.java         |  23 +-
+ .../ui/dialogs/CustomRulesDialog.java         | 118 +++++++++-
+ .../mindustry/ui/dialogs/DatabaseDialog.java  |   3 +-
+ .../mindustry/ui/dialogs/PausedDialog.java    |  12 +-
+ .../mindustry/ui/dialogs/PlanetDialog.java    |  27 ++-
+ .../ui/dialogs/SchematicsDialog.java          | 202 +++++++++++++++++-
+ .../ui/dialogs/SettingsMenuDialog.java        |  24 +--
+ .../mindustry/ui/fragments/ChatFragment.java  |   9 +-
+ .../ui/fragments/ConsoleFragment.java         |   2 +
+ .../mindustry/ui/fragments/HudFragment.java   | 168 ++++++++++++++-
+ .../mindustry/ui/fragments/MenuFragment.java  |  24 ++-
+ .../ui/fragments/PlacementFragment.java       | 164 +++++++++++---
+ .../ui/fragments/PlayerListFragment.java      |  70 +++---
+ 27 files changed, 1094 insertions(+), 145 deletions(-)
+
+diff --git a/core/src/mindustry/editor/MapInfoDialog.java b/core/src/mindustry/editor/MapInfoDialog.java
+index b4f56d136b632aae1841fcfb6f745018d40b9199..6e38c85a35901a80d632191502f10063066e8e2e 100644
+--- a/core/src/mindustry/editor/MapInfoDialog.java
++++ b/core/src/mindustry/editor/MapInfoDialog.java
+@@ -33,7 +33,8 @@ public class MapInfoDialog extends BaseDialog{
+     private void setup(){
+         cont.clear();
+ 
+-        ObjectMap<String, String> tags = editor.tags;
++        //MDTX: allow edit in game
++        ObjectMap<String, String> tags = state.isGame() ? state.map.tags : editor.tags;
+ 
+         cont.pane(t -> {
+             t.add("@editor.mapname").padRight(8).left();
+@@ -85,14 +86,14 @@ public class MapInfoDialog extends BaseDialog{
+ 
+                 r.button("@editor.generation", Icon.terrain, style, () -> {
+                     //randomize so they're not all the same seed
+-                    var res = maps.readFilters(editor.tags.get("genfilters", ""));
++                    var res = maps.readFilters(tags.get("genfilters", ""));
+                     res.each(GenerateFilter::randomize);
+ 
+                     generate.show(res,
+                     filters -> {
+                         //reset seed to 0 so it is not written
+                         filters.each(f -> f.seed = 0);
+-                        editor.tags.put("genfilters", JsonIO.write(filters));
++                        tags.put("genfilters", JsonIO.write(filters));
+                     });
+                     hide();
+                 }).marginLeft(10f);
+diff --git a/core/src/mindustry/entities/comp/BuildingComp.java b/core/src/mindustry/entities/comp/BuildingComp.java
+index 275d6842f96a84010a1d1c3efc2d494064e8e23e..3958f30572d00f047368dd82ee11b6a560d597af 100644
+--- a/core/src/mindustry/entities/comp/BuildingComp.java
++++ b/core/src/mindustry/entities/comp/BuildingComp.java
+@@ -41,6 +41,7 @@ import mindustry.world.blocks.power.*;
+ import mindustry.world.consumers.*;
+ import mindustry.world.meta.*;
+ import mindustry.world.modules.*;
++import mindustryX.features.*;
+ 
+ import java.util.*;
+ 
+@@ -77,6 +78,7 @@ abstract class BuildingComp implements Posc, Teamc, Healthc, Buildingc, Timerc,
+ 
+     transient boolean enabled = true;
+     transient @Nullable Building lastDisabler;
++    transient @Nullable Building lastLogicController;
+ 
+     @Nullable PowerModule power;
+     @Nullable ItemModule items;
+@@ -589,7 +591,7 @@ abstract class BuildingComp implements Posc, Teamc, Healthc, Buildingc, Timerc,
+     }
+ 
+     public boolean interactable(Team team){
+-        return state.teams.canInteract(team, team());
++        return state.teams.canInteract(team, team()) || RenderExt.editOtherBlock;
+     }
+ 
+     public float timeScale(){
+@@ -1511,7 +1513,8 @@ abstract class BuildingComp implements Posc, Teamc, Healthc, Buildingc, Timerc,
+         //derelict team icon currently doesn't display
+         return team == Team.derelict ?
+             block.localizedName + "\n" + Core.bundle.get("block.derelict") :
+-            block.localizedName + (team == player.team() || team.emoji.isEmpty() ? "" : " " + team.emoji);
++                "[#" + team.color + "]" + Strings.stripColors(block.localizedName) + (team == player.team() || team.emoji.isEmpty() ? "" : " " + team.emoji)
++                + (team.id > 5 ? "[" + team.id + "]" : "");
+     }
+ 
+     public TextureRegion getDisplayIcon(){
+@@ -1535,7 +1538,7 @@ abstract class BuildingComp implements Posc, Teamc, Healthc, Buildingc, Timerc,
+         table.row();
+ 
+         //only display everything else if the team is the same
+-        if(team == player.team()){
++        if(team == player.team() || RenderExt.showOtherInfo){
+             table.table(bars -> {
+                 bars.defaults().growX().height(18f).pad(4);
+ 
+@@ -1636,6 +1639,15 @@ abstract class BuildingComp implements Posc, Teamc, Healthc, Buildingc, Timerc,
+             table.add(result).growX();
+             table.row();
+         }
++        if (lastLogicController != null) {
++            table.add(lastLogicController.block.emoji() + " [lightgray](" + lastLogicController.tileX() + ", " + lastLogicController.tileY() + ")").growX().left().row();
++        }
++        if (Time.time < healSuppressionTime){
++            table.add("\uF89B[red]\uE815").update(label -> {
++                if (healSuppressionTime > 0) label.setText("\uF89B[red]\uE815 [white]~ " + UI.formatTime(healSuppressionTime - Time.time));
++                else label.visible = false;
++            }).row();
++        }
+     }
+ 
+      /** Called when this block is tapped to build a UI on the table.
+diff --git a/core/src/mindustry/entities/comp/ShieldComp.java b/core/src/mindustry/entities/comp/ShieldComp.java
+index f2f6e4c8083486ee5f764a6f13af232da4534300..1e06d2950428331e65745d4821d3c53f079c75c4 100644
+--- a/core/src/mindustry/entities/comp/ShieldComp.java
++++ b/core/src/mindustry/entities/comp/ShieldComp.java
+@@ -1,5 +1,6 @@
+ package mindustry.entities.comp;
+ 
++import arc.math.WindowedMean;
+ import arc.util.*;
+ import mindustry.*;
+ import mindustry.annotations.Annotations.*;
+@@ -22,6 +23,8 @@ abstract class ShieldComp implements Healthc, Posc{
+     transient float armor;
+     /** Shield opacity. */
+     transient float shieldAlpha = 0f;
++    private transient float lastHealth = 0f, lastShield = 0f;
++    private final transient WindowedMean healthBalanceMean = new WindowedMean(120);
+ 
+     @Replace
+     @Override
+@@ -72,5 +75,12 @@ abstract class ShieldComp implements Healthc, Posc{
+     public void update(){
+         shieldAlpha -= Time.delta / 15f;
+         if(shieldAlpha < 0) shieldAlpha = 0f;
++        healthBalanceMean.add(((health - lastHealth) + (shield - lastShield)) / Time.delta);
++        lastHealth = health;
++        lastShield = shield;
++    }
++
++    float healthBalance(){
++        return healthBalanceMean.mean();
+     }
+ }
+diff --git a/core/src/mindustry/entities/comp/StatusComp.java b/core/src/mindustry/entities/comp/StatusComp.java
+index 404c65d1ad4c5cd5bcd4a71a99cbe3696512e35e..903acedb675d95672ccbc09387b1b35f6344c9f8 100644
+--- a/core/src/mindustry/entities/comp/StatusComp.java
++++ b/core/src/mindustry/entities/comp/StatusComp.java
+@@ -247,4 +247,7 @@ abstract class StatusComp implements Posc{
+     public boolean hasEffect(StatusEffect effect){
+         return applied.get(effect.id);
+     }
++    Seq<StatusEntry> statuses(){
++        return statuses;
++    }
+ }
+diff --git a/core/src/mindustry/game/Schematic.java b/core/src/mindustry/game/Schematic.java
+index dde5886f6020aa1c372ac3346e81aab0c7fdedf7..793e1b23c43d7beb6677d8e29f6c9e22cf0d028b 100644
+--- a/core/src/mindustry/game/Schematic.java
++++ b/core/src/mindustry/game/Schematic.java
+@@ -8,7 +8,13 @@ import mindustry.mod.Mods.*;
+ import mindustry.type.*;
+ import mindustry.world.*;
+ import mindustry.world.blocks.power.*;
++import mindustry.world.blocks.production.Fracker;
++import mindustry.world.blocks.production.GenericCrafter;
++import mindustry.world.blocks.production.Separator;
+ import mindustry.world.blocks.storage.*;
++import mindustry.world.consumers.ConsumeItems;
++import mindustry.world.consumers.ConsumeLiquid;
++import mindustry.world.consumers.ConsumeLiquids;
+ 
+ import static mindustry.Vars.*;
+ 
+@@ -23,6 +29,9 @@ public class Schematic implements Publishable, Comparable<Schematic>{
+     /** Associated mod. If null, no mod is associated with this schematic. */
+     public @Nullable LoadedMod mod;
+ 
++    public ObjectFloatMap<Item> items;
++    public ObjectFloatMap<Liquid> liquids;
++
+     public Schematic(Seq<Stile> tiles, StringMap tags, int width, int height){
+         this.tiles = tiles;
+         this.tags = tags;
+@@ -30,6 +39,10 @@ public class Schematic implements Publishable, Comparable<Schematic>{
+         this.height = height;
+     }
+ 
++    public boolean containsBlock(Block block){
++        return tiles.find(tile -> tile.block == block) != null;
++    }
++
+     public float powerProduction(){
+         return tiles.sumf(s -> s.block instanceof PowerGenerator p ? p.getDisplayedPowerProduction() : 0f);
+     }
+@@ -38,6 +51,97 @@ public class Schematic implements Publishable, Comparable<Schematic>{
+         return tiles.sumf(s -> s.block.consPower != null ? s.block.consPower.usage : 0f);
+     }
+ 
++    public void calProduction(){
++        items = new ObjectFloatMap<>(content.items().copy().size << 1);
++        liquids = new ObjectFloatMap<>(content.liquids().copy().size << 1);
++        tiles.each(t -> {
++            if(t.block == null)
++                return;
++
++            if(t.block instanceof GenericCrafter gc){
++                for(var c : gc.nonOptionalConsumers){
++                    if(c instanceof ConsumeItems consumeItems){
++                        for(ItemStack stack : consumeItems.items){
++                            Item item = stack.item;
++                            items.put(item, items.get(item, 0) - stack.amount * 60f / gc.craftTime);
++                        }
++                    }else if(c instanceof ConsumeLiquid consumeLiquid){
++                        Liquid liquid = consumeLiquid.liquid;
++                        liquids.put(liquid, liquids.get(liquid, 0) - consumeLiquid.amount * 60f);
++                    }else if(c instanceof ConsumeLiquids consumeLiquids){
++                        for(LiquidStack stack : consumeLiquids.liquids){
++                            Liquid liquid = stack.liquid;
++                            liquids.put(liquid, liquids.get(liquid, 0) - stack.amount * 60f);
++                        }
++                    }
++                }
++                if(gc.outputsItems()){
++                    for(ItemStack stack : gc.outputItems){
++                        Item item = stack.item;
++                        items.put(item, items.get(item, 0) + stack.amount * 60f / gc.craftTime);
++                    }
++                }/*
++                if(gc.outputLiquid != null){
++                    liquids.put(gc.outputLiquid.liquid, liquids.get(gc.outputLiquid.liquid, 0) + gc.outputLiquid.amount * 60f);
++                }*/
++                if(gc.outputLiquids != null){
++                    for(LiquidStack stack : gc.outputLiquids){
++                        Liquid liquid = stack.liquid;
++                        liquids.put(liquid, liquids.get(liquid, 0) + stack.amount * 60f);
++                    }
++                }
++            }else if(t.block instanceof Separator s){
++                for(var c : s.nonOptionalConsumers){
++                    if(c instanceof ConsumeItems consumeItems){
++                        for(ItemStack stack : consumeItems.items){
++                            Item item = stack.item;
++                            items.put(item, items.get(item, 0) - stack.amount * 60f / s.craftTime);
++                        }
++                    }else if(c instanceof ConsumeLiquid consumeLiquid){
++                        Liquid liquid = consumeLiquid.liquid;
++                        liquids.put(liquid, liquids.get(liquid, 0) - consumeLiquid.amount * 60f);
++                    }
++                }
++            }else if(t.block instanceof Fracker f){
++                for(var c : f.nonOptionalConsumers){
++                    if(c instanceof ConsumeItems consumeItems){
++                        for(ItemStack stack : consumeItems.items){
++                            Item item = stack.item;
++                            items.put(item, items.get(item, 0) - stack.amount * f.itemUseTime / 60f);
++                        }
++                    }
++                }
++            }else if(t.block instanceof PowerGenerator){
++                float itemDuration = 0;
++                if(t.block instanceof ConsumeGenerator cg){
++                    itemDuration = cg.itemDuration;
++                }else if(t.block instanceof NuclearReactor nr){
++                    itemDuration = nr.itemDuration;
++                }else if(t.block instanceof ImpactReactor ir){
++                    itemDuration = ir.itemDuration;
++                }
++                if(itemDuration > 0){
++                    for(var c : t.block.nonOptionalConsumers){
++                        if(c instanceof ConsumeItems consumeItems){
++                            for(ItemStack stack : consumeItems.items){
++                                Item item = stack.item;
++                                items.put(item, items.get(item, 0) - stack.amount * 60f / itemDuration);
++                            }
++                        }else if(c instanceof ConsumeLiquid consumeLiquid){
++                            Liquid liquid = consumeLiquid.liquid;
++                            liquids.put(liquid, liquids.get(liquid, 0) - consumeLiquid.amount * 60f);
++                        }else if(c instanceof ConsumeLiquids consumeLiquids){
++                            for(LiquidStack stack : consumeLiquids.liquids){
++                                Liquid liquid = stack.liquid;
++                                liquids.put(liquid, liquids.get(liquid, 0) - stack.amount * 60f);
++                            }
++                        }
++                    }
++                }
++            }
++        });
++    }
++
+     public ItemSeq requirements(){
+         ItemSeq requirements = new ItemSeq();
+ 
+diff --git a/core/src/mindustry/graphics/BlockRenderer.java b/core/src/mindustry/graphics/BlockRenderer.java
+index 89248d96c9ae9f7e27da374717861cfd103da3c6..a89c404bb2997586c844dcb453f01ecfde781f49 100644
+--- a/core/src/mindustry/graphics/BlockRenderer.java
++++ b/core/src/mindustry/graphics/BlockRenderer.java
+@@ -509,13 +509,18 @@ public class BlockRenderer{
+                         Draw.z(Layer.block);
+                     }
+ 
+-                    if(build.team != pteam){
+-                        if(build.block.drawTeamOverlay){
+-                            build.drawTeam();
+-                            Draw.z(Layer.block);
++                    if(build.team != pteam && build.block.drawTeamOverlay){
++                        Draw.z(Layer.block + 0.01f);
++                        build.drawTeam();
++                    }
++                    if(build.team == player.team() || RenderExt.showOtherInfo){
++                        if(renderer.drawStatus && block.hasConsumers){
++                            build.drawStatus();
++                        }
++                        if(RenderExt.drawBlockDisabled && !build.enabled){
++                            Draw.z(Layer.power + 1);
++                            build.drawDisabled();
+                         }
+-                    }else if(renderer.drawStatus && block.hasConsumers){
+-                        build.drawStatus();
+                     }
+                 }
+                 Draw.reset();
+diff --git a/core/src/mindustry/graphics/OverlayRenderer.java b/core/src/mindustry/graphics/OverlayRenderer.java
+index 4615b0d9382ead0bfab195af00b4ee5a71c04e1f..8919e7297623351066faa1cc4f187aad5605fe37 100644
+--- a/core/src/mindustry/graphics/OverlayRenderer.java
++++ b/core/src/mindustry/graphics/OverlayRenderer.java
+@@ -17,6 +17,7 @@ import mindustry.gen.*;
+ import mindustry.input.*;
+ import mindustry.world.*;
+ import mindustry.world.blocks.storage.CoreBlock.*;
++import mindustryX.features.*;
+ 
+ import static mindustry.Vars.*;
+ 
+@@ -184,9 +185,18 @@ public class OverlayRenderer{
+                     //it must be clear that there is a core here.
+                     float br = state.rules.buildRadius(core.team);
+                     if(/*core.wasVisible && */br > 0f && Core.camera.bounds(Tmp.r1).overlaps(Tmp.r2.setCentered(core.x, core.y, br * 2f))){
+-                        Draw.color(Color.darkGray);
+-                        Lines.circle(core.x, core.y - 2,br);
+-                        Draw.color(Pal.accent, core.team.color, 0.5f + Mathf.absin(Time.time, 10f, 0.5f));
++                        Draw.color(Color.darkGray, 0.7f);
++                        Lines.circle(core.x, core.y - 2, br);
++                        Draw.color(Pal.accent, core.team.color, 0.2f + Mathf.absin(Time.time, 10f, 0.5f));
++                        Lines.circle(core.x, core.y, br);
++                    }
++                });
++                player.team().cores().each(core -> {
++                    float br = state.rules.buildRadius(core.team);
++                    if(br > 0f && state.rules.pvp && Core.camera.bounds(Tmp.r1).overlaps(Tmp.r2.setCentered(core.x, core.y, state.rules.enemyCoreBuildRadius * 2f))){
++                        Draw.color(Color.darkGray, 0.4f);
++                        Lines.circle(core.x, core.y - 2, br);
++                        Draw.color(Pal.accent, core.team.color, 0.0f + Mathf.absin(Time.time, 10f, 0.5f));
+                         Lines.circle(core.x, core.y, br);
+                     }
+                 });
+@@ -212,12 +222,14 @@ public class OverlayRenderer{
+             Vec2 vec = Core.input.mouseWorld(input.getMouseX(), input.getMouseY());
+             Building build = world.buildWorld(vec.x, vec.y);
+ 
+-            if(build != null && build.team == player.team()){
++            //if(build != null && build.team == player.team()){
++            if(build != null){
+                 build.drawSelect();
+                 if(!build.enabled && build.block.drawDisabled){
+                    build.drawDisabled();
+                 }
+-
++            }
++            if(build != null && build.team == player.team()){
+                 if(Core.input.keyDown(Binding.rotatePlaced) && build.block.rotate && build.block.quickRotate && build.interactable(player.team())){
+                     control.input.drawArrow(build.block, build.tileX(), build.tileY(), build.rotation, true);
+                     Draw.color(Pal.accent, 0.3f + Mathf.absin(4f, 0.2f));
+@@ -229,12 +241,22 @@ public class OverlayRenderer{
+ 
+         input.drawOverSelect();
+ 
++        //单位射程
++        if(ui.hudfrag.blockfrag.hover() instanceof Unit unit){
++            Draw.color(unit.team.color);
++            Lines.dashCircle(unit.x, unit.y, unit.type.range);
++            Draw.color();
++        }
++
+         if(ui.hudfrag.blockfrag.hover() instanceof Unit unit && unit.controller() instanceof LogicAI ai && ai.controller != null && ai.controller.isValid() && (state.isEditor() || !ai.controller.block.privileged)){
+             var build = ai.controller;
+             Drawf.square(build.x, build.y, build.block.size * tilesize/2f + 2f);
+             if(!unit.within(build, unit.hitSize * 2f)){
+                 Drawf.arrow(unit.x, unit.y, build.x, build.y, unit.hitSize *2f, 4f);
+             }
++			Draw.color(Pal.accent);
++            Lines.line(unit.x, unit.y, build.x, build.y);
++            Draw.color();
+         }
+ 
+         //draw selection overlay when dropping item
+@@ -263,6 +285,10 @@ public class OverlayRenderer{
+                 }
+             }
+         }
++
++        if(player.unit() instanceof BlockUnitc unitc){
++            unitc.tile().drawSelect();
++        }
+     }
+ 
+     public void checkApplySelection(Unit u){
+diff --git a/core/src/mindustry/input/DesktopInput.java b/core/src/mindustry/input/DesktopInput.java
+index f7ac4952272dbf657cbf2b4bc74a320ebd967dc9..bb012f379aafab3daa06e2cfe9ec291d68aba66a 100644
+--- a/core/src/mindustry/input/DesktopInput.java
++++ b/core/src/mindustry/input/DesktopInput.java
+@@ -22,8 +22,10 @@ import mindustry.gen.*;
+ import mindustry.graphics.*;
+ import mindustry.ui.*;
+ import mindustry.world.*;
++import mindustryX.features.*;
+ 
+ import static arc.Core.*;
++import static mindustry.Vars.net;
+ import static mindustry.Vars.*;
+ import static mindustry.input.PlaceMode.*;
+ 
+@@ -63,6 +65,9 @@ public class DesktopInput extends InputHandler{
+     private float buildPlanMouseOffsetX, buildPlanMouseOffsetY;
+     private boolean changedCursor, pressedCommandRect;
+ 
++    /** Current thing being shot at. */
++    public @Nullable Teamc target;
++
+     boolean showHint(){
+         return ui.hudfrag.shown && Core.settings.getBool("hints") && selectPlans.isEmpty() && !player.dead() &&
+             (!isBuilding && !Core.settings.getBool("buildautopause") || player.unit().isBuilding() || !player.dead() && !player.unit().spawnedByCore());
+@@ -116,6 +121,10 @@ public class DesktopInput extends InputHandler{
+                 b.table(a -> {
+                     a.button("@schematic.add", Icon.save, this::showSchematicSave).colspan(2).size(250f, 50f).disabled(f -> lastSchematic == null || lastSchematic.file != null);
+                 });
++                b.row();
++                b.table(a -> {
++                    a.button("@schematic.preview", Icon.info, this::showSchematicPreview).colspan(2).size(250f, 50f).disabled(f -> lastSchematic == null || lastSchematic.file != null);
++                });
+             }).margin(6f);
+         });
+     }
+@@ -975,11 +984,10 @@ public class DesktopInput extends InputHandler{
+             }
+         }
+ 
+-        float mouseAngle = Angles.mouseAngle(unit.x, unit.y);
+         boolean aimCursor = omni && player.shooting && unit.type.hasWeapons() && unit.type.faceTarget && !boosted;
+ 
+         if(aimCursor){
+-            unit.lookAt(mouseAngle);
++            unit.lookAt(unit.angleTo(unit.aimX, unit.aimY));
+         }else{
+             unit.lookAt(unit.prefRotation());
+         }
+diff --git a/core/src/mindustry/input/InputHandler.java b/core/src/mindustry/input/InputHandler.java
+index f698eec753ba47b99460527e320c34e5d0007714..b0758aa09ddc6b4351ede08bf4ef565a33f611dd 100644
+--- a/core/src/mindustry/input/InputHandler.java
++++ b/core/src/mindustry/input/InputHandler.java
+@@ -38,8 +38,10 @@ import mindustry.world.*;
+ import mindustry.world.blocks.ConstructBlock.*;
+ import mindustry.world.blocks.*;
+ import mindustry.world.blocks.distribution.*;
++import mindustry.world.blocks.logic.*;
+ import mindustry.world.blocks.payloads.*;
+ import mindustry.world.blocks.storage.*;
++import mindustry.world.blocks.storage.CoreBlock.*;
+ import mindustry.world.meta.*;
+ import mindustryX.features.*;
+ 
+@@ -116,6 +118,7 @@ public abstract class InputHandler implements InputProcessor, GestureListener{
+     /** Groups of units saved to different hotkeys */
+     public IntSeq[] controlGroups = new IntSeq[controlGroupBindings.length];
+ 
++    public Rect lastSelection = new Rect();
+     private Seq<BuildPlan> plansOut = new Seq<>(BuildPlan.class);
+     private QuadTree<BuildPlan> playerPlanTree = new QuadTree<>(new Rect());
+ 
+@@ -732,7 +735,7 @@ public abstract class InputHandler implements InputProcessor, GestureListener{
+             throw new ValidateException(player, "Player cannot control a building.");
+         }
+ 
+-        if(player.team() == build.team && build.canControlSelect(player.unit())){
++        if((player.team() == build.team || (build instanceof CoreBuild && state.rules.editor)) && build.canControlSelect(player.unit())){
+             var before = player.unit();
+ 
+             build.onControlSelect(player.unit());
+@@ -893,7 +896,7 @@ public abstract class InputHandler implements InputProcessor, GestureListener{
+     }
+ 
+     public void update(){
+-        if(spectating != null && (!spectating.isValid() || spectating.team != player.team())){
++        if(spectating != null && (!spectating.isValid())){
+             spectating = null;
+         }
+ 
+@@ -1125,6 +1128,8 @@ public abstract class InputHandler implements InputProcessor, GestureListener{
+                     attack = selectedEnemyUnit(target.x, target.y);
+                 }
+ 
++                if(input.keyDown(KeyCode.altLeft)) attack = null;
++
+                 int[] ids = new int[selectedUnits.size];
+                 for(int i = 0; i < ids.length; i++){
+                     ids[i] = selectedUnits.get(i).id;
+@@ -1414,6 +1419,11 @@ public abstract class InputHandler implements InputProcessor, GestureListener{
+         });
+     }
+ 
++    protected void showSchematicPreview(){
++        if(lastSchematic == null) return;
++        ui.schematics.showInfo(lastSchematic);
++    }
++
+     public void rotatePlans(Seq<BuildPlan> plans, int direction){
+         int ox = schemOriginX(), oy = schemOriginY();
+ 
+@@ -1449,6 +1459,20 @@ public abstract class InputHandler implements InputProcessor, GestureListener{
+             plan.x = World.toTile(wx - plan.block.offset) + ox;
+             plan.y = World.toTile(wy - plan.block.offset) + oy;
+             plan.rotation = plan.block.planRotation(Mathf.mod(plan.rotation + direction, 4));
++
++            if(LogicExt.rotateCanvas.get() && plan.block instanceof CanvasBlock cb){
++                CanvasBlock.CanvasBuild temp = cb.new CanvasBuild();
++                Pixmap pix = new Pixmap(cb.canvasSize, cb.canvasSize), pix2 = new Pixmap(cb.canvasSize, cb.canvasSize);
++                cb.makePixmap((byte[])plan.config, pix);
++                pix.each((px, py) -> pix2.setRaw(
++                direction >= 0 ? py : cb.canvasSize - py - 1,
++                direction >= 0 ? cb.canvasSize - px - 1 : px,
++                pix.getRaw(px, py)));
++                plan.config = temp.packPixmap(pix2);
++                temp.remove();
++                pix.dispose();
++                pix2.dispose();
++            }
+         });
+     }
+ 
+@@ -1478,6 +1502,17 @@ public abstract class InputHandler implements InputProcessor, GestureListener{
+ 
+             //flip rotation
+             plan.block.flipRotation(plan, x);
++
++            if(LogicExt.rotateCanvas.get() && plan.block instanceof CanvasBlock cb){
++                CanvasBlock.CanvasBuild temp = cb.new CanvasBuild();
++                Pixmap pix = new Pixmap(cb.canvasSize, cb.canvasSize);
++                cb.makePixmap((byte[])plan.config, pix);
++                Pixmap out = x ? pix.flipX() : pix.flipY();
++                plan.config = temp.packPixmap(out);
++                temp.remove();
++                pix.dispose();
++                out.dispose();
++            }
+         });
+     }
+ 
+@@ -1651,6 +1686,9 @@ public abstract class InputHandler implements InputProcessor, GestureListener{
+             font.setUseIntegerPositions(ints);
+             Draw.z(z);
+         }
++
++        lastSelection.set(x1, y1, x2 - x1, y2 - y1);
++        lastSelection.normalize();
+     }
+ 
+     protected void flushSelectPlans(Seq<BuildPlan> plans){
+@@ -2024,7 +2062,7 @@ public abstract class InputHandler implements InputProcessor, GestureListener{
+ 
+     public @Nullable Building selectedControlBuild(){
+         Building build = world.buildWorld(Core.input.mouseWorld().x, Core.input.mouseWorld().y);
+-        if(build != null && !player.dead() && build.canControlSelect(player.unit()) && build.team == player.team()){
++        if(build != null && !player.dead() && build.canControlSelect(player.unit()) && (build.team == player.team() || (build instanceof CoreBuild && state.rules.editor))){
+             return build;
+         }
+         return null;
+@@ -2125,6 +2163,9 @@ public abstract class InputHandler implements InputProcessor, GestureListener{
+ 
+     public boolean canShoot(){
+         if(player.dead()) return false;
++        if(Core.settings.getBool("playerNeedShooting")){
++            return block == null && !onConfigurable() && !isDroppingItem() && !commandMode;
++        }
+         return block == null && !onConfigurable() && !isDroppingItem() && !player.unit().activelyBuilding() &&
+         !(player.unit() instanceof Mechc && player.unit().isFlying()) && !player.unit().mining() && !commandMode;
+     }
+diff --git a/core/src/mindustry/input/MobileInput.java b/core/src/mindustry/input/MobileInput.java
+index b68b2ecad371b3263340c6df19d8c842c247ccdb..aadb4f131566ff7c54e4a3605af046f7e9bce27e 100644
+--- a/core/src/mindustry/input/MobileInput.java
++++ b/core/src/mindustry/input/MobileInput.java
+@@ -334,7 +334,7 @@ public class MobileInput extends InputHandler implements GestureListener{
+                     //why the heck doesn't setOrigin work for scaling
+                     img.setTranslation(img.getWidth(), 0f);
+                 });
+-
++                b.button(Icon.info, style, this::showSchematicPreview).disabled(f -> lastSchematic == null || lastSchematic.file != null);
+             }).margin(4f);
+         });
+     }
+@@ -1046,6 +1046,10 @@ public class MobileInput extends InputHandler implements GestureListener{
+             unit.vel.approachDelta(Vec2.ZERO, unit.speed() * type.accel / 2f);
+         }
+ 
++        if(Core.settings.getBool("detach-camera")){
++            movement.setZero();
++        }
++
+         unit.hitbox(rect);
+         rect.grow(4f);
+ 
+diff --git a/core/src/mindustry/logic/LExecutor.java b/core/src/mindustry/logic/LExecutor.java
+index 7fcdd08fe98b0de48c0a83e1e4c1877760160b21..4bff96bb91ed1bd823d1b11b1361769a54d14234 100644
+--- a/core/src/mindustry/logic/LExecutor.java
++++ b/core/src/mindustry/logic/LExecutor.java
+@@ -30,6 +30,7 @@ import mindustry.world.blocks.logic.LogicDisplay.*;
+ import mindustry.world.blocks.logic.MessageBlock.*;
+ import mindustry.world.blocks.payloads.*;
+ import mindustry.world.meta.*;
++import mindustryX.features.ui.*;
+ 
+ import static mindustry.Vars.*;
+ 
+@@ -1718,8 +1719,14 @@ public class LExecutor{
+             }
+ 
+             switch(type){
+-                case notify -> ui.hudfrag.showToast(Icon.info, text);
+-                case announce -> ui.announce(text, duration.numf());
++                case notify -> {
++                    ui.hudfrag.showToast(Icon.info, text);
++                    ArcMessageDialog.Type.logicNotify.log(text);
++                }
++                case announce -> {
++                    ui.announce(text, duration.numf());
++                    ArcMessageDialog.Type.logicAnnounce.log(text);
++                }
+                 case toast -> ui.showInfoToast(text, duration.numf());
+                 //TODO desync?
+                 case mission -> state.rules.mission = text;
+diff --git a/core/src/mindustry/type/UnitType.java b/core/src/mindustry/type/UnitType.java
+index 5f5942a26c52558c071150f84be7d6499c6f7309..5ef605b5cfb843753ff95518a34c769192fdc4f0 100644
+--- a/core/src/mindustry/type/UnitType.java
++++ b/core/src/mindustry/type/UnitType.java
+@@ -38,6 +38,7 @@ import mindustry.world.blocks.units.*;
+ import mindustry.world.consumers.*;
+ import mindustry.world.meta.*;
+ import mindustryX.features.*;
++import mindustryX.features.ui.*;
+ 
+ import static arc.graphics.g2d.Draw.*;
+ import static mindustry.Vars.*;
+@@ -688,19 +689,45 @@ public class UnitType extends UnlockableContent implements Senseable{
+         table.table(t -> {
+             t.left();
+             t.add(new Image(uiIcon)).size(iconMed).scaling(Scaling.fit);
+-            t.labelWrap(unit.isPlayer() ? unit.getPlayer().coloredName() + "\n[lightgray]" + localizedName : localizedName).left().width(190f).padLeft(5);
++            if(unit.team.id < 6){
++                if (unit.isPlayer()) {
++                    t.labelWrap(unit.getPlayer().coloredName() + "\n[#" + unit.team.color + "]" + localizedName).left().width(190f).padLeft(5);
++                } else {
++                    t.labelWrap("[#" + unit.team.color + "]" + localizedName).left().width(190f).padLeft(5);
++                }
++            }else{
++                if (unit.isPlayer()) {
++                    t.labelWrap(unit.getPlayer().coloredName() + "\n[#" + unit.team.color + "]" + localizedName + "[" + unit.team.id + "]").left().width(190f).padLeft(5);
++                } else {
++                    t.labelWrap("[#" + unit.team.color + "]" + localizedName + "[" + unit.team.id + "]").left().width(190f).padLeft(5);
++                }
++            }
+         }).growX().left();
+         table.row();
+ 
+         table.table(bars -> {
+             bars.defaults().growX().height(20f).pad(4);
+ 
+-            //TODO overlay shields
+-            bars.add(new Bar("stat.health", Pal.health, unit::healthf).blink(Color.white));
++            bars.add(new Bar(() -> {
++                StringBuilder str = new StringBuilder();
++                if(unit.shield() > 0){
++                    str.append(FormatDefault.format(unit.health)).append("[gray]+[white]").append(FormatDefault.format(unit.shield));
++                }else{
++                    str.append("\uE813 ").append(new Format(4).percent(unit.health, unit.maxHealth));
++                }
++                float healthBalance = unit.healthBalance();
++                if (!Mathf.equal(healthBalance, 0f, 0.1f)) {
++                    str.append(healthBalance < 0 ? "[scarlet]" : "[acid]+");
++                    float number = healthBalance * Time.toSeconds;
++                    str.append(FormatDefault.format(number));
++                    str.append("/s[]");
++                }
++                return str.toString();
++            }, () -> Pal.health, unit::healthf).blink(Color.white));
+             bars.row();
+ 
+             if(state.rules.unitAmmo){
+-                bars.add(new Bar(ammoType.icon() + " " + Core.bundle.get("stat.ammo"), ammoType.barColor(), () -> unit.ammo / ammoCapacity));
++                bars.add(new Bar(() -> ammoType.icon() + " " + Core.bundle.format("bar.ammoDetail", unit.ammo, ammoCapacity), () -> ammoType.barColor(), () -> unit.ammo / ammoCapacity));
+                 bars.row();
+             }
+ 
+@@ -709,7 +736,10 @@ public class UnitType extends UnlockableContent implements Senseable{
+             }
+ 
+             if(payloadCapacity > 0 && unit instanceof Payloadc payload){
+-                bars.add(new Bar("stat.payloadcapacity", Pal.items, () -> payload.payloadUsed() / payloadCapacity));
++                bars.add(new Bar(() -> Strings.format("装载：@/@ @",
++                Strings.autoFixed(payload.payloadUsed() / tilesize / tilesize, 4),
++                Strings.autoFixed(payloadCapacity / tilesize / tilesize, 4),
++                StatUnit.blocksSquared.localized()), () -> Pal.items, () -> payload.payloadUsed() / payloadCapacity));
+                 bars.row();
+ 
+                 var count = new float[]{-1};
+@@ -721,16 +751,55 @@ public class UnitType extends UnlockableContent implements Senseable{
+                 }).growX().left().height(0f).pad(0f);
+             }
+         }).growX();
++        if(!unit.statuses().isEmpty()){
++            table.row().table(t -> {
++                for(StatusEntry entry : unit.statuses()){
++                    if(t.getChildren().size % 5 == 0) t.row();
++                    t.stack(
++                    new Table(o -> {
++                        o.left();
++                        o.image(entry.effect.uiIcon).size(iconMed).scaling(Scaling.fit);
++                    }),
++                    new Table(tt -> {
++                        tt.left().bottom();
++                        tt.label(() -> entry.effect.permanent || entry.time > Time.toHours * 10f ? "Inf" : UI.formatTime(entry.time)).style(Styles.outlineLabel);
++                        tt.pack();
++                    })).padLeft(8f);
++                }
++            });
++            table.row().table(tt -> {
++                tt.defaults().pad(0, 8, 0, 8);
++                tt.add("血量");
++                tt.add("伤害");
++                tt.add("攻速");
++                tt.add("移速");
++                tt.row();
++                tt.add(FormatDefault.format(unit.healthMultiplier));
++                tt.add(FormatDefault.format(unit.damageMultiplier));
++                tt.add(FormatDefault.format(unit.reloadMultiplier));
++                tt.add(FormatDefault.format(unit.speedMultiplier));
++            }).growX().row();
++            table.row().table(tt -> {
++                tt.defaults().pad(0, 8, 0, 8);
++                tt.add("建速");
++                tt.add("阻力");
++                tt.add("装甲");
++                tt.row();
++                tt.add(FormatDefault.format(unit.buildSpeedMultiplier));
++                tt.add(FormatDefault.format(unit.dragMultiplier));
++                tt.add(FormatDefault.format(unit.armorOverride >= 0.0F ? unit.armorOverride : unit.armor));
++            }).growX().row();
++        }
+ 
+         if(unit.controller() instanceof LogicAI ai){
+             table.row();
+-            table.add(Blocks.microProcessor.emoji() + " " + Core.bundle.get("units.processorcontrol")).growX().wrap().left();
+-            if(ai.controller != null && (Core.settings.getBool("mouseposition") || Core.settings.getBool("position"))){
+-                table.row();
+-                table.add("[lightgray](" + ai.controller.tileX() + ", " + ai.controller.tileY() + ")").growX().wrap().left();
+-            }
++            table.table(tt->{
++                tt.add(Blocks.microProcessor.emoji() + " " + Core.bundle.get("units.processorcontrol")).growX().left();
++                if(ai.controller != null && (Core.settings.getBool("mouseposition") || Core.settings.getBool("position"))){
++                    tt.add("[lightgray](" + ai.controller.tileX() + ", " + ai.controller.tileY() + ")").growX().right();
++                }
++            }).growX().wrap().left();
+             table.row();
+-            table.label(() -> Iconc.settings + " " + (long)unit.flag + "").color(Color.lightGray).growX().wrap().left();
+             if(net.active() && ai.controller != null && ai.controller.lastAccessed != null){
+                 table.row();
+                 table.add(Core.bundle.format("lastaccessed", ai.controller.lastAccessed)).growX().wrap().left();
+@@ -741,6 +810,11 @@ public class UnitType extends UnlockableContent implements Senseable{
+         }
+ 
+         table.row();
++        table.table(t -> {
++            t.add(Iconc.settings + " " + (long)unit.flag + "").color(Color.lightGray).growX();
++            t.add(Fonts.getUnicodeStr(unit.type().name) + unit.team.data().countType(unit.type()) + "/" + Units.getStringCap(unit.team)).color(Color.lightGray).growX();
++        }).growX();
++        table.row();
+     }
+ 
+     /** @return whether this block supports a specific environment. */
+@@ -1704,12 +1778,15 @@ public class UnitType extends UnlockableContent implements Senseable{
+             unit.y + Angles.trnsy(unit.rotation + 180f, itemOffsetY),
+             size, size);
+ 
+-            if(unit.isLocal() && !renderer.pixelate){
++            if(RenderExt.unitItemCarried || (unit.isLocal() && !renderer.pixelate)){
++                float z = Draw.z();
++                Draw.z(z + .01f); // Remove this if you enjoy 1000 texture swaps
+                 Fonts.outline.draw(unit.stack.amount + "",
+                 unit.x + Angles.trnsx(unit.rotation + 180f, itemOffsetY),
+                 unit.y + Angles.trnsy(unit.rotation + 180f, itemOffsetY) - 3,
+                 Pal.accent, 0.25f * unit.itemTime / Scl.scl(1f), false, Align.center
+                 );
++                Draw.z(z);
+             }
+ 
+             Draw.reset();
+diff --git a/core/src/mindustry/type/Weapon.java b/core/src/mindustry/type/Weapon.java
+index ffe886839cae012a3075411f13c70e032fca9717..0fe2757c95b4504f24eb7c1c91791aea810ce93b 100644
+--- a/core/src/mindustry/type/Weapon.java
++++ b/core/src/mindustry/type/Weapon.java
+@@ -23,6 +23,8 @@ import mindustry.entities.units.*;
+ import mindustry.gen.*;
+ import mindustry.graphics.*;
+ import mindustry.world.meta.*;
++import mindustryX.features.*;
++import mindustryX.features.draw.*;
+ 
+ import static mindustry.Vars.*;
+ 
+@@ -294,6 +296,23 @@ public class Weapon implements Cloneable{
+ 
+         Draw.xscl = 1f;
+ 
++        if (mount.shoot && RenderExt.unitWeaponTargetLine){
++            if(mount.aimX !=0 && mount.aimY != 0  && Mathf.len(mount.aimX - wx, mount.aimY - wy) <= 1200f){
++                Draw.z(z + 1f);
++                Lines.stroke(1f);
++                if (unit.controller() == player) {
++                    Draw.color(RenderExt.playerEffectColor);
++                } else {
++                    Draw.color(unit.team.color);
++                }
++                Draw.alpha(0.8f);
++                Lines.line(wx, wy, mount.aimX, mount.aimY);
++                if(!(unit.controller() instanceof Player) || Core.settings.getInt("unitTargetType") == 0)
++                    Lines.spikes(mount.aimX, mount.aimY, 4f, 4f, 4, (float)(Math.atan((mount.aimX - wx) / (mount.aimY - wy) * Mathf.doubleRadDeg)) + 45f);
++                Draw.reset();
++            }
++        }
++
+         Draw.z(z);
+     }
+ 
+diff --git a/core/src/mindustry/ui/Fonts.java b/core/src/mindustry/ui/Fonts.java
+index 1de3876c6adec0c03a3f477e242aaeac0550b138..380ab33b18be21881c60fadeaacf3507832972cf 100644
+--- a/core/src/mindustry/ui/Fonts.java
++++ b/core/src/mindustry/ui/Fonts.java
+@@ -30,7 +30,7 @@ public class Fonts{
+     private static final ObjectSet<String> unscaled = ObjectSet.with("iconLarge", "logic");
+     private static ObjectIntMap<String> unicodeIcons = new ObjectIntMap<>();
+     private static IntMap<String> unicodeToName = new IntMap<>();
+-    private static ObjectMap<String, String> stringIcons = new ObjectMap<>();
++    public static ObjectMap<String, String> stringIcons = new ObjectMap<>();
+     private static ObjectMap<String, TextureRegion> largeIcons = new ObjectMap<>();
+ 
+     public static Font def, outline, icon, iconLarge, tech, logic, monospace;
+diff --git a/core/src/mindustry/ui/dialogs/ContentInfoDialog.java b/core/src/mindustry/ui/dialogs/ContentInfoDialog.java
+index 40cb40582ac726f0d9028f2cd7d22af4bc0622c3..0a11b9b87960a078e2b0ce865aac089ed647d4a8 100644
+--- a/core/src/mindustry/ui/dialogs/ContentInfoDialog.java
++++ b/core/src/mindustry/ui/dialogs/ContentInfoDialog.java
+@@ -9,9 +9,12 @@ import arc.util.*;
+ import mindustry.ctype.*;
+ import mindustry.gen.*;
+ import mindustry.graphics.*;
++import mindustry.ui.Styles;
+ import mindustry.input.*;
+ import mindustry.ui.*;
+ import mindustry.world.meta.*;
++import mindustryX.features.*;
++import mindustryX.features.ui.*;
+ 
+ import static arc.Core.*;
+ import static mindustry.Vars.*;
+@@ -40,8 +43,9 @@ public class ContentInfoDialog extends BaseDialog{
+         content.checkStats();
+ 
+         table.table(title1 -> {
+-            title1.image(content.uiIcon).size(iconXLarge).scaling(Scaling.fit);
+-            title1.add("[accent]" + content.localizedName + (settings.getBool("console") ? "\n[gray]" + content.name : "")).padLeft(5);
++            title1.image(content.uiIcon).size(iconXLarge).scaling(Scaling.fit).get().clicked(() -> Core.app.setClipboardText(content.emoji()));
++            int logicId = content.getLogicId();
++            title1.add("[accent]" + content.localizedName + "\n[gray]" + content.name + (logicId != -1 ? " <#" + logicId +">": "")).padLeft(5);
+         });
+ 
+         table.row();
+@@ -99,7 +103,7 @@ public class ContentInfoDialog extends BaseDialog{
+         }
+ 
+         if(content.details != null){
+-            table.add("[gray]" + (content.unlocked() || !content.hideDetails ? content.details : Iconc.lock + " " + Core.bundle.get("unlock.incampaign"))).pad(6).padTop(20).width(400f).wrap().fillX();
++            table.add("[gray]" + content.details ).pad(6).padTop(20).width(400f).wrap().fillX();
+             table.row();
+         }
+ 
+@@ -114,6 +118,19 @@ public class ContentInfoDialog extends BaseDialog{
+ 
+         content.displayExtra(table);
+ 
++        table.table(t -> {
++            t.defaults().size(40f);
++            t.button(content.emoji(), Styles.cleart, () -> Core.app.setClipboardText(content.emoji())).tooltip(content.emoji());
++            t.button(Icon.info, Styles.clearNonei, () -> Core.app.setClipboardText(content.name)).tooltip(content.name);
++            if(content.description != null)
++                t.button(Icon.book, Styles.clearNonei, () -> Core.app.setClipboardText(content.description)).tooltip(content.description);
++
++            if(net.active()){
++                t.button("♐简", Styles.cleart, () -> ShareFeature.shareContent(content, false)).width(60f);
++                t.button("♐详", Styles.cleart, () -> ShareFeature.shareContent(content, true)).width(60f);
++            }
++        }).fillX().padLeft(10);
++
+         ScrollPane pane = new ScrollPane(table);
+         table.marginRight(30f);
+         //TODO: some things (e.g. reconstructor requirements) are too long and screw up the layout
+diff --git a/core/src/mindustry/ui/dialogs/CustomRulesDialog.java b/core/src/mindustry/ui/dialogs/CustomRulesDialog.java
+index 14cbaa5f624e29d8974d7b82116e01b11ba4abab..5a00a56811aa4a4228e50ef291830b56918caa2f 100644
+--- a/core/src/mindustry/ui/dialogs/CustomRulesDialog.java
++++ b/core/src/mindustry/ui/dialogs/CustomRulesDialog.java
+@@ -3,6 +3,7 @@ package mindustry.ui.dialogs;
+ import arc.*;
+ import arc.func.*;
+ import arc.graphics.*;
++import arc.math.geom.*;
+ import arc.scene.ui.*;
+ import arc.scene.ui.ImageButton.*;
+ import arc.scene.ui.layout.*;
+@@ -16,11 +17,13 @@ import mindustry.game.*;
+ import mindustry.game.Rules.*;
+ import mindustry.gen.*;
+ import mindustry.graphics.*;
++import mindustry.graphics.g3d.*;
+ import mindustry.io.*;
+ import mindustry.type.*;
+ import mindustry.type.Weather.*;
+ import mindustry.ui.*;
+ import mindustry.world.*;
++import mindustryX.features.*;
+ 
+ import static arc.Core.*;
+ import static arc.util.Time.*;
+@@ -31,6 +34,7 @@ public class CustomRulesDialog extends BaseDialog{
+     private Table main;
+     private Prov<Rules> resetter;
+     private LoadoutDialog loadoutDialog;
++    private BannedContentDialog<Block> revealedblocks = new BannedContentDialog<>("@revealedblocks", ContentType.block, b -> b.showUnlock() && (!b.isVanilla() || b.hasEmoji()));
+     private BannedContentDialog<Block> bannedBlocks = new BannedContentDialog<>("@bannedblocks", ContentType.block, Block::canBeBuilt);
+     private BannedContentDialog<UnitType> bannedUnits = new BannedContentDialog<>("@bannedunits", ContentType.unit, u -> !u.isHidden());
+     public boolean showRuleEditRule;
+@@ -40,6 +44,7 @@ public class CustomRulesDialog extends BaseDialog{
+     public String currentName = "";
+     public String ruleSearch = "";
+     public Seq<Runnable> additionalSetup; // for modding to easily add new rules
++    private Seq<Team> teams;
+ 
+     public CustomRulesDialog(){
+         this(false);
+@@ -59,6 +64,7 @@ public class CustomRulesDialog extends BaseDialog{
+         additionalSetup = new Seq<>();
+         categories = new Seq<>();
+         categoryNames = new Seq<>();
++        teams = Seq.with(Team.baseTeams);
+ 
+         buttons.button("@edit", Icon.pencil, () -> {
+             BaseDialog dialog = new BaseDialog("@waves.edit");
+@@ -67,7 +73,7 @@ public class CustomRulesDialog extends BaseDialog{
+ 
+             dialog.cont.table(Tex.button, t -> {
+                 var style = Styles.cleart;
+-                t.defaults().size(280f, 64f).pad(2f);
++                t.defaults().size(280f, 64f).maxWidth(Float.NEGATIVE_INFINITY).pad(2f);
+ 
+                 t.button("@waves.copy", Icon.copy, style, () -> {
+                     ui.showInfoFade("@copied");
+@@ -150,6 +156,7 @@ public class CustomRulesDialog extends BaseDialog{
+         check("@rules.wavesending", b -> rules.waveSending = b, () -> rules.waveSending, () -> rules.waves);
+         check("@rules.wavetimer", b -> rules.waveTimer = b, () -> rules.waveTimer, () -> rules.waves);
+         check("@rules.waitForWaveToEnd", b -> rules.waitEnemies = b, () -> rules.waitEnemies, () -> rules.waves && rules.waveTimer);
++        number("@rules.winWave", b -> rules.winWave = (int)b, () -> (int)rules.winWave);
+         check("@rules.randomwaveai", b -> rules.randomWaveAI = b, () -> rules.randomWaveAI, () -> rules.waves);
+         check("@rules.wavespawnatcores", b -> rules.wavesSpawnAtCores = b, () -> rules.wavesSpawnAtCores, () -> rules.waves);
+         check("@rules.airUseSpawns", b -> rules.airUseSpawns = b, () -> rules.airUseSpawns, () -> rules.waves);
+@@ -166,7 +173,7 @@ public class CustomRulesDialog extends BaseDialog{
+         check("@rules.reactorexplosions", b -> rules.reactorExplosions = b, () -> rules.reactorExplosions);
+         check("@rules.schematic", b -> rules.schematicsAllowed = b, () -> rules.schematicsAllowed);
+         check("@rules.coreincinerates", b -> rules.coreIncinerates = b, () -> rules.coreIncinerates);
+-        check("@rules.cleanupdeadteams", b -> rules.cleanupDeadTeams = b, () -> rules.cleanupDeadTeams, () -> rules.pvp);
++        check("@rules.cleanupdeadteams", b -> rules.cleanupDeadTeams = b, () -> rules.cleanupDeadTeams);
+         check("@rules.disableworldprocessors", b -> rules.disableWorldProcessors = b, () -> rules.disableWorldProcessors);
+         number("@rules.buildcostmultiplier", false, f -> rules.buildCostMultiplier = f, () -> rules.buildCostMultiplier, () -> !rules.infiniteResources);
+         number("@rules.buildspeedmultiplier", f -> rules.buildSpeedMultiplier = f, () -> rules.buildSpeedMultiplier, 0.001f, 50f);
+@@ -186,6 +193,9 @@ public class CustomRulesDialog extends BaseDialog{
+         if(Core.bundle.get("bannedblocks").toLowerCase().contains(ruleSearch)){
+             current.button("@bannedblocks", () -> bannedBlocks.show(rules.bannedBlocks)).left().width(300f).row();
+         }
++        if(Core.bundle.get("revealedblocks").toLowerCase().contains(ruleSearch)){
++            current.button("@revealedblocks", () -> revealedblocks.show(rules.revealedBlocks)).left().width(300f).row();
++        }
+         check("@rules.hidebannedblocks", b -> rules.hideBannedBlocks = b, () -> rules.hideBannedBlocks);
+         check("@bannedblocks.whitelist", b -> rules.blockWhitelist = b, () -> rules.blockWhitelist);
+ 
+@@ -218,6 +228,7 @@ public class CustomRulesDialog extends BaseDialog{
+         check("@rules.explosions", b -> rules.damageExplosions = b, () -> rules.damageExplosions);
+         check("@rules.fire", b -> rules.fire = b, () -> rules.fire);
+         check("@rules.fog", b -> rules.fog = b, () -> rules.fog);
++        check("@rules.staticFog", b -> rules.staticFog = b, () -> rules.staticFog);
+         check("@rules.lighting", b -> rules.lighting = b, () -> rules.lighting);
+ 
+         check("@rules.limitarea", b -> rules.limitMapArea = b, () -> rules.limitMapArea, () -> !state.isGame());
+@@ -239,11 +250,47 @@ public class CustomRulesDialog extends BaseDialog{
+                 b.add("@rules.ambientlight");
+             }, () -> ui.picker.show(rules.ambientLight, rules.ambientLight::set)).left().width(250f).row();
+         }
++        if(Core.bundle.get("rules.staticColor").toLowerCase().contains(ruleSearch)){
++            current.button(b -> {
++                b.left();
++                b.table(Tex.pane, in -> {
++                    in.stack(new Image(Tex.alphaBg), new Image(Tex.whiteui){{
++                        update(() -> setColor(rules.staticColor));
++                    }}).grow();
++                }).margin(4).size(50f).padRight(10);
++                b.add("@rules.staticColor");
++            }, () -> ui.picker.show(rules.staticColor, rules.staticColor::set)).left().width(250f).row();
++        }
++        if(Core.bundle.get("rules.dynamicColor").toLowerCase().contains(ruleSearch)){
++            current.button(b -> {
++                b.left();
++                b.table(Tex.pane, in -> {
++                    in.stack(new Image(Tex.alphaBg), new Image(Tex.whiteui){{
++                        update(() -> setColor(rules.dynamicColor));
++                    }}).grow();
++                }).margin(4).size(50f).padRight(10);
++                b.add("@rules.dynamicColor");
++            }, () -> ui.picker.show(rules.dynamicColor, rules.dynamicColor::set)).left().width(250f).row();
++        }
+ 
+         if(Core.bundle.get("rules.weather").toLowerCase().contains(ruleSearch)){
+             current.button("@rules.weather", this::weatherDialog).width(250f).left().row();
+         }
+ 
++        category("arcExperimental");
++        check("@rules.canGameOver", b -> rules.canGameOver = b, () -> rules.canGameOver);
++        check("@rules.coreDestroyClear", b -> rules.coreDestroyClear = b, () -> rules.coreDestroyClear);
++        check("@rules.unitPayloadUpdate", b -> rules.unitPayloadUpdate = b, () -> rules.unitPayloadUpdate);
++        check("@rules.showSpawns", b -> rules.showSpawns = b, () -> rules.showSpawns);
++        check("允许控制单位", b -> rules.possessionAllowed = b, () -> rules.possessionAllowed);
++        check("禁用重建", b -> rules.ghostBlocks = !b, () -> !rules.ghostBlocks);
++
++        check("@rules.limitarea", b -> rules.limitMapArea = b, () -> rules.limitMapArea);
++        numberi("x", x -> state.rules.limitX = x, () -> state.rules.limitX, () -> state.rules.limitMapArea, 0, 10000);
++        numberi("y", y -> state.rules.limitY = y, () -> state.rules.limitY, () -> state.rules.limitMapArea, 0, 10000);
++        numberi("w", w -> state.rules.limitWidth = w, () -> state.rules.limitWidth, () -> state.rules.limitMapArea, 0, 10000);
++        numberi("h", h -> state.rules.limitHeight = h, () -> state.rules.limitHeight, () -> state.rules.limitMapArea, 0, 10000);
++        check("@rules.disableOutsideArea",b -> rules.disableOutsideArea = b, () -> rules.disableOutsideArea);
+ 
+         category("planet");
+         if(Core.bundle.get("rules.title.planet").toLowerCase().contains(ruleSearch)){
+@@ -254,10 +301,10 @@ public class CustomRulesDialog extends BaseDialog{
+ 
+                 t.defaults().size(140f, 50f);
+ 
+-                for(Planet planet : content.planets().select(p -> p.accessible && p.visible && p.isLandable())){
+-                    t.button(planet.localizedName, style, () -> {
+-                        planet.applyRules(rules, true);
+-                    }).group(group).checked(b -> rules.planet == planet);
++            for(Planet planet : content.planets()){
++                t.button(planet.localizedName, style, () -> {
++                    planet.applyRules(rules, true);
++                }).group(group).checked(b -> rules.planet == planet);
+ 
+                     if(t.getChildren().size % 3 == 0){
+                         t.row();
+@@ -277,10 +324,29 @@ public class CustomRulesDialog extends BaseDialog{
+         if(showRuleEditRule){
+             check("@rules.allowedit", b -> rules.allowEditRules = b, () -> rules.allowEditRules);
+         }
++        current.button("所有队伍开启无限火力", () -> {
++            for(Team team : Team.all){
++                team.rules().cheat = true;
++            }
++            setup();
++        }).width(256f).height(32f).row();
++        current.button("所有队伍关闭无限火力", () -> {
++            for(Team team : Team.all){
++                team.rules().cheat = false;
++            }
++            setup();
++        }).width(256f).height(32f).row();
++
+         team("@rules.playerteam", t -> rules.defaultTeam = t, () -> rules.defaultTeam);
+         team("@rules.enemyteam", t -> rules.waveTeam = t, () -> rules.waveTeam);
+ 
+-        for(Team team : Team.baseTeams){
++        current.button("更多队伍设置", Styles.flatBordert, () -> UIExt.teamSelect.select(team -> teams.contains(team), team -> {
++            if(teams.contains(team)) teams.remove(team);
++            else teams.add(team);
++            setup();
++        })).marginLeft(14f).fillX().height(55f).row();
++
++        for(Team team : teams){
+             boolean[] shown = {false};
+             Table wasCurrent = current;
+ 
+@@ -297,6 +363,12 @@ public class CustomRulesDialog extends BaseDialog{
+                 current = c;
+                 TeamRule teams = rules.teams.get(team);
+ 
++                check("@rules.cheat", b -> teams.cheat = b, () -> teams.cheat);
++
++                //MDTX: added
++                check("@rules.infiniteAmmo",b -> teams.infiniteAmmo = b, () -> teams.infiniteAmmo);
++                check("@rules.aiCoreSpawn", b -> teams.aiCoreSpawn = b, () -> teams.aiCoreSpawn);
++
+                 number("@rules.blockhealthmultiplier", f -> teams.blockHealthMultiplier = f, () -> teams.blockHealthMultiplier);
+                 number("@rules.blockdamagemultiplier", f -> teams.blockDamageMultiplier = f, () -> teams.blockDamageMultiplier);
+ 
+@@ -334,6 +406,32 @@ public class CustomRulesDialog extends BaseDialog{
+             }, () -> shown[0]).left().growX().row();
+         }
+ 
++        check("自定义背景[lightgray](需要设置空地板)", t -> {
++            rules.planetBackground = t ? new PlanetParams(){{planet = Planets.sun;zoom=1f;camPos = new Vec3(1.2388899f, 1.6047299f, 2.4758825f);}} : null;
++            setup();
++        }, () -> rules.planetBackground != null);
++        if (rules.planetBackground != null){
++            current.table(Tex.button, t -> {
++                t.margin(10f);
++                var group = new ButtonGroup<>();
++                var style = Styles.flatTogglet;
++
++                t.defaults().size(140f, 50f);
++
++                for(Planet planet : content.planets()){
++                    t.button(planet.localizedName, style, () -> rules.planetBackground.planet = planet).group(group).checked(b -> rules.planetBackground.planet == planet);
++                    if(t.getChildren().size % 3 == 0){
++                        t.row();
++                    }
++                }
++            }).left().fill(false).expand(false, false).row();
++            number("放缩", f -> rules.planetBackground.zoom = f, () -> rules.planetBackground.zoom, 0.0001f, 999);
++            number("位置x", f -> rules.planetBackground.camPos.x = f, () -> rules.planetBackground.camPos.x);
++            number("位置y", f -> rules.planetBackground.camPos.y = f, () -> rules.planetBackground.camPos.y);
++            number("位置z", f -> rules.planetBackground.camPos.z = f, () -> rules.planetBackground.camPos.z);
++        }
++
++
+         additionalSetup.each(Runnable::run);
+ 
+         for(var i = 0; i < categories.size; i++){
+@@ -368,6 +466,7 @@ public class CustomRulesDialog extends BaseDialog{
+                     cons.get(team);
+                 }).pad(1f).checked(b -> prov.get() == team).size(60f).tooltip(team.coloredName()).with(i -> i.getStyle().imageUpColor = team.color);
+             }
++            t.button(Icon.add, Styles.squareTogglei, 38f, () -> UIExt.teamSelect.pickOne(cons, prov.get())).pad(1f).checked(b -> !Seq.with(Team.baseTeams).contains(prov.get())).size(60f).tooltip("更多队伍选择");
+         }).padTop(0).row();
+     }
+ 
+@@ -400,7 +499,7 @@ public class CustomRulesDialog extends BaseDialog{
+             t.field((prov.get()) + "", s -> cons.get(Strings.parseInt(s)))
+                 .update(a -> a.setDisabled(!condition.get()))
+                 .padRight(100f)
+-                .valid(f -> Strings.parseInt(f) >= min && Strings.parseInt(f) <= max).width(120f).left();
++                .valid(f -> Strings.parseInt(f) >= -999999 && Strings.parseInt(f) <= 999999999).width(120f).left();
+         }).padTop(0);
+         ruleInfo(cell, text);
+         current.row();
+@@ -415,7 +514,8 @@ public class CustomRulesDialog extends BaseDialog{
+             t.field((integer ? (int)prov.get() : prov.get()) + "", s -> cons.get(Strings.parseFloat(s)))
+             .padRight(50f)
+             .update(a -> a.setDisabled(!condition.get()))
+-            .valid(f -> Strings.canParsePositiveFloat(f) && Strings.parseFloat(f) >= min && Strings.parseFloat(f) <= max).width(120f).left();
++            //.valid(f -> Strings.canParsePositiveFloat(f) && Strings.parseFloat(f) >= min && Strings.parseFloat(f) <= max).width(120f).left();
++            .valid(f ->  Strings.canParsePositiveFloat(f)).width(120f).left();
+         }).padTop(0);
+         ruleInfo(cell, text);
+         current.row();
+diff --git a/core/src/mindustry/ui/dialogs/DatabaseDialog.java b/core/src/mindustry/ui/dialogs/DatabaseDialog.java
+index 3f87fb047e9e1b06c579058f6e36528e1826e2a8..37f1134cb6c20dc7116c87f9e4bdb72c01618efa 100644
+--- a/core/src/mindustry/ui/dialogs/DatabaseDialog.java
++++ b/core/src/mindustry/ui/dialogs/DatabaseDialog.java
+@@ -18,7 +18,6 @@ import mindustry.graphics.*;
+ import mindustry.type.*;
+ import mindustry.ui.*;
+ 
+-import static arc.Core.*;
+ import static mindustry.Vars.*;
+ 
+ public class DatabaseDialog extends BaseDialog{
+@@ -210,7 +209,7 @@ public class DatabaseDialog extends BaseDialog{
+                                         ui.content.show(unlock);
+                                     }
+                                 });
+-                                image.addListener(new Tooltip(t -> t.background(Tex.button).add(unlock.localizedName + (settings.getBool("console") ? "\n[gray]" + unlock.name : ""))));
++                                image.addListener(new Tooltip(t -> t.background(Tex.button).add(unlock.localizedName + "\n[gray]" + unlock.name + (logicVars.lookupLogicId(unlock) != -1 ? " <#" + logicVars.lookupLogicId(unlock) +">": ""))));
+                             }
+ 
+                             if((++count) % cols == 0){
+diff --git a/core/src/mindustry/ui/dialogs/PausedDialog.java b/core/src/mindustry/ui/dialogs/PausedDialog.java
+index 3e0cca2191e2fd062b96af031a6b2af5ba80e224..7a91c9eb1c90142831ea71c54e694d4633e1f208 100644
+--- a/core/src/mindustry/ui/dialogs/PausedDialog.java
++++ b/core/src/mindustry/ui/dialogs/PausedDialog.java
+@@ -63,7 +63,7 @@ public class PausedDialog extends BaseDialog{
+             cont.button("@back", Icon.left, this::hide).name("back");
+             cont.button("@settings", Icon.settings, ui.settings::show).name("settings");
+ 
+-            if(!state.isCampaign() && !state.isEditor()){
++            if(Core.settings.getBool("save_more_map") || (!state.isCampaign() && !state.isEditor())){
+                 cont.row();
+                 cont.button("@savegame", Icon.save, save::show);
+                 cont.button("@loadgame", Icon.upload, load::show).disabled(b -> net.active());
+@@ -90,6 +90,10 @@ public class PausedDialog extends BaseDialog{
+ 
+             cont.row();
+ 
++            cont.button("@joingame", Icon.host, () -> {
++                this.hide();
++                ui.join.show();
++            });
+             cont.button("@quit", Icon.exit, this::showQuitConfirm).colspan(2).width(dw + 10f).update(s -> s.setText(control.saves.getCurrent() != null && control.saves.getCurrent().isAutosave() ? "@save.quit" : "@quit"));
+ 
+         }else{
+@@ -132,6 +136,12 @@ public class PausedDialog extends BaseDialog{
+                 s.setText(control.saves.getCurrent() != null && control.saves.getCurrent().isAutosave() ? "@save.quit" : "@quit");
+                 s.getLabelCell().growX().wrap();
+             });
++
++            if(mobile){
++                cont.row();
++                int columns = cont.getColumns();
++                cont.button("@database", Icon.book, ui.database::show).colspan(columns).size(Float.NEGATIVE_INFINITY, 60).fillX();
++            }
+         }
+     }
+ 
+diff --git a/core/src/mindustry/ui/dialogs/PlanetDialog.java b/core/src/mindustry/ui/dialogs/PlanetDialog.java
+index 1b4bbdb2e44b130e2b8fef9751da7a41eb787a5e..2216f954c48cda2f0b732921491231d0c36821fb 100644
+--- a/core/src/mindustry/ui/dialogs/PlanetDialog.java
++++ b/core/src/mindustry/ui/dialogs/PlanetDialog.java
+@@ -38,6 +38,7 @@ import mindustry.type.Planet.*;
+ import mindustry.ui.*;
+ import mindustry.world.blocks.storage.*;
+ import mindustry.world.blocks.storage.CoreBlock.*;
++import mindustryX.features.func.*;
+ 
+ import static arc.Core.*;
+ import static mindustry.Vars.*;
+@@ -75,6 +76,8 @@ public class PlanetDialog extends BaseDialog implements PlanetInterfaceRenderer{
+     private CampaignRulesDialog campaignRules = new CampaignRulesDialog();
+     private SectorSelectDialog selectDialog = new SectorSelectDialog();
+ 
++    private boolean alwaysShowName = false;
++
+     public PlanetDialog(){
+         super("", Styles.fullDialog);
+ 
+@@ -298,12 +301,14 @@ public class PlanetDialog extends BaseDialog implements PlanetInterfaceRenderer{
+         if(Core.graphics.isPortrait()){
+             buttons.add(sectorTop).colspan(2).fillX().row();
+             addBack();
++            buttons.button("区块名称", Icon.bookOpen, () -> alwaysShowName = !alwaysShowName).size(100f, 54f).pad(2).bottom();
+             addTech();
+         }else{
+             addBack();
+             buttons.add().growX();
+             buttons.add(sectorTop).minWidth(230f);
+             buttons.add().growX();
++            buttons.button("区块名称", Icon.bookOpen, () -> alwaysShowName = !alwaysShowName).size(100f, 54f).pad(2).bottom();
+             addTech();
+         }
+     }
+@@ -549,6 +554,11 @@ public class PlanetDialog extends BaseDialog implements PlanetInterfaceRenderer{
+                         Draw.rect(icon, 0, 0, iw, iw * icon.height / icon.width);
+                     });
+                 }
++                planets.drawPlane(sec, () -> {
++                    if((canSelect(sec) || sec.hasBase()) && alwaysShowName){
++                        FuncX.drawText(Vec2.ZERO, (sec.preset != null ? "" : "[gray]") + sec.name(), Scl.scl(2));
++                    }
++                });
+             }
+ 
+             if(debugShowNumbers && (sec.hasEnemyBase() || sec.preset != null)){
+@@ -758,7 +768,7 @@ public class PlanetDialog extends BaseDialog implements PlanetInterfaceRenderer{
+ 
+             //sector notifications & search
+             c.top().right();
+-            c.defaults().width(290f);
++            c.defaults().width(350f);
+ 
+             c.button(bundle.get("sectorlist") +
+             (attacked == 0 ? "" : "\n[red]⚠[lightgray] " + bundle.format("sectorlist.attacked", "[red]" + attacked + "[]")),
+@@ -802,7 +812,7 @@ public class PlanetDialog extends BaseDialog implements PlanetInterfaceRenderer{
+ 
+             readd[0] = () -> {
+                 con.clearChildren();
+-                for(Sector sec : all){
++                for(Sector sec : all.copy().sort(sector -> sector.info.production.size)){
+                     if(sec.hasBase() && (searchText.isEmpty() || sec.name().toLowerCase().contains(searchText.toLowerCase()))){
+                         con.button(t -> {
+                             t.marginRight(10f);
+@@ -823,6 +833,19 @@ public class PlanetDialog extends BaseDialog implements PlanetInterfaceRenderer{
+                                 String ic = sec.iconChar() == null ? "" : sec.iconChar() + " ";
+ 
+                                 head.add(ic + sec.name()).growX().wrap();
++
++                                if(!mobile && !sec.info.export.isEmpty() && sec.info.destination != null && sec.info.destination.hasBase()){
++                                    String des = sec.info.destination.iconChar();
++                                    String text = Iconc.rightOpen + " " + (des == null || des.isEmpty() ? "" : des + " ") + sec.info.destination.name();
++                                    head.button(text, Styles.cleart, () -> {
++                                        ui.planet.showSelect(sec, other -> {
++                                            if(other.planet == sec.planet){
++                                                sec.info.destination = other;
++                                            }
++                                        });
++                                    }).minWidth(150f).right().padRight(10f);
++                                }
++
+                             }).growX().row();
+ 
+                             if(sec.isAttacked()){
+diff --git a/core/src/mindustry/ui/dialogs/SchematicsDialog.java b/core/src/mindustry/ui/dialogs/SchematicsDialog.java
+index fef8e21d771ccfd81cbc65a0bc62642ebf721952..f855efcd27a47e8ac5a0ac3dffc8a3c8a8413619 100644
+--- a/core/src/mindustry/ui/dialogs/SchematicsDialog.java
++++ b/core/src/mindustry/ui/dialogs/SchematicsDialog.java
+@@ -15,6 +15,7 @@ import arc.scene.ui.layout.*;
+ import arc.scene.utils.*;
+ import arc.struct.*;
+ import arc.util.*;
++import mindustry.content.*;
+ import mindustry.ctype.*;
+ import mindustry.game.*;
+ import mindustry.gen.*;
+@@ -22,6 +23,11 @@ import mindustry.graphics.*;
+ import mindustry.input.*;
+ import mindustry.type.*;
+ import mindustry.ui.*;
++import mindustry.world.*;
++import mindustry.world.blocks.production.*;
++import mindustry.world.meta.*;
++import mindustryX.features.*;
++import mindustryX.features.ui.*;
+ 
+ import java.util.regex.*;
+ 
+@@ -38,6 +44,9 @@ public class SchematicsDialog extends BaseDialog{
+     private Seq<String> tags, selectedTags = new Seq<>();
+     private boolean checkedTags;
+ 
++    private Planet selectedPlanet;
++    private boolean fromShare = false;
++
+     public SchematicsDialog(){
+         super("@schematics");
+         Core.assets.load("sprites/schematic-background.png", Texture.class).loaded = t -> t.setWrap(TextureWrap.repeat);
+@@ -47,6 +56,9 @@ public class SchematicsDialog extends BaseDialog{
+         shouldPause = true;
+         addCloseButton();
+         buttons.button("@schematic.import", Icon.download, this::showImport);
++        if (mobile) buttons.row();
++        buttons.button("蓝图档案馆", Icon.link, () -> UIExt.openURI("https://docs.qq.com/sheet/DVHNoS3lIcm1NbFFS"));
++        buttons.button("图片转换器" + Blocks.canvas.emoji() + Blocks.logicDisplay.emoji() + Blocks.sorter.emoji(), Icon.image, PicToMindustry::show);
+         makeButtonOverlay();
+         shown(this::setup);
+         onResize(this::setup);
+@@ -110,6 +122,30 @@ public class SchematicsDialog extends BaseDialog{
+             in.button(Icon.pencilSmall, this::showAllTags).size(tagh).pad(2).tooltip("@schematic.edittags");
+         }).height(tagh).fillX();
+ 
++        cont.row().table(in -> {
++            in.left();
++            in.add("科技树：").padRight(4);
++            for(var tag : content.planets().select(it -> it.alwaysUnlocked)){
++                in.button(tag.localizedName, Styles.togglet, () -> {
++                    if(selectedPlanet == tag) selectedPlanet = null;
++                    else selectedPlanet = tag;
++                    rebuildPane.run();
++                }).checked((t) -> selectedPlanet == tag).get().getLabel().setWrap(false);
++            }
++
++            in.add("辅助筛选：").padLeft(20f).padRight(4);
++            in.button(Items.copper.emoji(), Styles.togglet, () -> {
++                Core.settings.put("arcSchematicCanBuild", !Core.settings.getBool("arcSchematicCanBuild"));
++                rebuildPane.run();
++            }).size(tagh).pad(2).tooltip("可建造(核心有此类资源+地图未禁用)").checked(t -> Core.settings.getBool("arcSchematicCanBuild"));
++            in.add("蓝图包含：").padLeft(20f).padRight(4);
++            in.button(control.input.block == null ? "[red]\uE815" : control.input.block.emoji(), Styles.togglet, () -> {
++                if(control.input.block == null) return;
++                mindustryX.VarsX.autoSelectSchematic.toggle();
++                rebuildPane.run();
++            }).size(tagh).pad(2).tooltip("蓝图需包含此建筑").checked(t -> control.input.block != null && mindustryX.VarsX.autoSelectSchematic.get());
++        }).height(tagh).fillX();
++
+         cont.row();
+ 
+         cont.pane(t -> {
+@@ -140,6 +176,10 @@ public class SchematicsDialog extends BaseDialog{
+                     if(selectedTags.any() && !s.labels.containsAll(selectedTags)) continue;
+                     //make sure search fits
+                     if(!search.isEmpty() && !ignoreSymbols.matcher(s.name().toLowerCase()).replaceAll("").contains(searchString)) continue;
++
++                    if(selectedPlanet != null && !s.tiles.allMatch((it) -> it.block.isOnPlanet(selectedPlanet))) continue;
++                    if(mindustryX.VarsX.autoSelectSchematic.get() && control.input.block != null && !s.containsBlock(control.input.block)) continue;
++                    if(Core.settings.getBool("arcSchematicCanBuild") && !arcSchematicCanBuild(s)) continue;
+                     if(firstSchematic == null) firstSchematic = s;
+ 
+                     Button[] sel = {null};
+@@ -212,6 +252,11 @@ public class SchematicsDialog extends BaseDialog{
+ 
+             rebuildPane.run();
+         }).grow().scrollX(false);
++
++        if(mindustryX.VarsX.autoSelectSchematic.get() && control.input.block!=null){
++            String text = "[orange]蓝图筛选模式[white]:蓝图必须包含 "+control.input.block.emoji();
++            UIExt.announce(text, 5f);
++        }
+     }
+ 
+     public void showInfo(Schematic schematic){
+@@ -291,6 +336,14 @@ public class SchematicsDialog extends BaseDialog{
+                 t.button("@schematic.exportfile", Icon.export, style, () -> {
+                     dialog.hide();
+                     platform.export(s.name(), schematicExtension, file -> Schematics.write(s, file));
++                }).marginLeft(12f).row();
++                t.button("聊天分享蓝图", Icon.chat, style, () -> {
++                    dialog.hide();
++                    ShareFeature.shareSchematic(s);
++                }).marginLeft(12f).row();
++                t.button("复制到剪切板(高级版，含介绍)", Icon.star, style, () -> {
++                    dialog.hide();
++                    ShareFeature.shareSchematicClipboard(s);
+                 }).marginLeft(12f);
+             });
+         });
+@@ -299,6 +352,18 @@ public class SchematicsDialog extends BaseDialog{
+         dialog.show();
+     }
+ 
++    public void readShare(String base64, @Nullable Player sender){
++        try{
++            Schematic s = Schematics.readBase64(base64);
++            s.removeSteamID();
++            s.tags.put("name", sender == null ? "来自服务器的蓝图" : "来自" + sender.plainName() + "的蓝图");
++            fromShare = true;
++            SchematicsDialog.this.showInfo(s);
++        }catch(Throwable e){
++            ui.showException(e);
++        }
++    }
++
+     public void showEdit(Schematic s){
+         new BaseDialog("@schematic.edit"){{
+             setFillParent(true);
+@@ -376,6 +441,7 @@ public class SchematicsDialog extends BaseDialog{
+     }
+ 
+     void addTag(Schematic s, String tag){
++        s.labels.remove(it -> it.equals(tag));
+         s.labels.add(tag);
+         s.save();
+         tagsChanged();
+@@ -579,6 +645,11 @@ public class SchematicsDialog extends BaseDialog{
+                     t.button("@schematic.texttag", Icon.add, () -> showNewTag(res -> rebuild[0].run())).wrapLabel(false).get().getLabelCell().padLeft(5);
+                     t.button("@schematic.icontag", Icon.add, () -> showNewIconTag(res -> rebuild[0].run())).wrapLabel(false).get().getLabelCell().padLeft(5);
+                 });
++                p.row();
++                p.table(t -> {
++                    t.left().defaults().fillX().height(tagh).pad(2);
++                    t.button("自动标签", Icon.add, () -> arcAutoTags(rebuild[0])).wrapLabel(false).get().getLabelCell().padLeft(5);
++                });
+ 
+             };
+ 
+@@ -587,6 +658,104 @@ public class SchematicsDialog extends BaseDialog{
+         dialog.show();
+     }
+ 
++    void arcAutoTags(Runnable done){
++        new Dialog(){{
++            closeOnBack();
++            setFillParent(true);
++
++            Table t = new Table();
++            cont.pane(t);
++            resized(true, () -> {
++                t.clearChildren();
++                t.marginRight(19f);
++                t.defaults().size(48f);
++
++                int cols = (int)Math.min(20, Core.graphics.getWidth() / Scl.scl(52f));
++
++                for(ContentType ctype : defaultContentIcons){
++                    t.row();
++                    t.image().colspan(cols).growX().width(Float.NEGATIVE_INFINITY).height(3f).color(Pal.accent);
++                    t.row();
++
++                    int i = 0;
++                    for(UnlockableContent u : content.getBy(ctype).<UnlockableContent>as()){
++                        if(!u.isHidden() && u.unlockedNow() && u.hasEmoji() && !tags.contains(u.emoji())){
++                            t.button(new TextureRegionDrawable(u.uiIcon), Styles.flati, iconMed, () -> {
++                                String out = u.emoji();
++                                tags.add(out);
++                                arcAutoTag(u, out);
++
++                                done.run();
++                                hide();
++                            });
++
++                            if(++i % cols == 0) t.row();
++                        }
++                    }
++                }
++            });
++            buttons.button("@back", Icon.left, this::hide).size(210f, 64f);
++        }}.show();
++    }
++
++    void arcAutoTag(UnlockableContent u, String tag){
++        if(u instanceof Block block){
++            for(Schematic s : schematics.all()){
++                s.tiles.each(sBlock -> {
++                    if(sBlock.block == block){
++                        addTag(s, tag);
++                    }
++                });
++            }
++        }else if(u instanceof Item item){
++            Seq<Block> blocklist = new Seq<>();
++            for(Block factory : content.blocks()){
++                if(factory instanceof GenericCrafter crafter){
++                    if(crafter.outputItems == null) continue;
++                    for(ItemStack stack : crafter.outputItems){
++                        if(stack.item == item) blocklist.add(factory);
++                    }
++                }
++            }
++            for(Schematic s : schematics.all()){
++                s.tiles.each(sBlock -> {
++                    if(blocklist.contains(sBlock.block)){
++                        addTag(s, tag);
++                    }
++                });
++            }
++        }else if(u instanceof Liquid liquid){
++            Seq<Block> blocklist = new Seq<>();
++            for(Block factory : content.blocks()){
++                if(factory instanceof GenericCrafter crafter){
++                    if(crafter.outputLiquids == null) continue;
++                    for(LiquidStack stack : crafter.outputLiquids){
++                        if(stack.liquid == liquid) blocklist.add(factory);
++                    }
++                }
++            }
++            for(Schematic s : schematics.all()){
++                s.tiles.each(sBlock -> {
++                    if(blocklist.contains(sBlock.block)){
++                        addTag(s, tag);
++                    }
++                });
++            }
++        }
++    }
++
++    boolean arcSchematicCanBuild(Schematic s){
++        for(ItemStack item : s.requirements()){
++            if(!UIExt.coreItems.hadItem(item.item)) return false;
++        }
++        for(var tile : s.tiles){
++            Block block = tile.block;
++            if(!block.isPlaceable()) return false;
++            if(state.rules.bannedBlocks.contains(block)) return false;
++        }
++        return true;
++    }
++
+     void buildTags(Schematic schem, Table t){
+         buildTags(schem, t, true);
+     }
+@@ -800,13 +969,44 @@ public class SchematicsDialog extends BaseDialog{
+                     }
+                 });
+             }
++            cont.row();
+ 
++            schem.calProduction();
++            cont.table(r -> {
++                int i = 0;
++                for(Item item : schem.items.keys()){
++                    r.image(item.uiIcon).left().size(iconMed);
++                    r.label(
++                    () -> (schem.items.get(item, 0) > 0 ? "+" : "") + Strings.autoFixed(schem.items.get(item, 0), 2) + StatUnit.perSecond.localized()
++                    ).padLeft(2).left().padRight(5).color(Color.lightGray);
++                    if(++i % 4 == 0){
++                        r.row();
++                    }
++                }
++                for(Liquid liquid : schem.liquids.keys()){
++                    r.image(liquid.uiIcon).left().size(iconMed);
++                    r.label(
++                    () -> (schem.liquids.get(liquid, 0) > 0 ? "+" : "") + Strings.autoFixed(schem.liquids.get(liquid, 0), 2) + StatUnit.perSecond.localized()
++                    ).padLeft(2).left().padRight(5).color(Color.lightGray);
++                    if(++i % 4 == 0){
++                        r.row();
++                    }
++                }
++            });
+             buttons.clearChildren();
+             buttons.defaults().size(Core.graphics.isPortrait() ? 150f : 210f, 64f);
+             buttons.button("@back", Icon.left, this::hide);
+             buttons.button("@editor.export", Icon.upload, () -> showExport(schem));
+             buttons.button("@edit", Icon.edit, () -> showEdit(schem));
+-
++            if(fromShare){
++                buttons.button("@save", Icon.save, () -> {
++                    fromShare = false;
++                    schematics.add(schem);
++                    setup();
++                    ui.showInfoFade("@schematic.saved");
++                    checkTags(schem);
++                });
++            }
+             show();
+         }
+     }
+diff --git a/core/src/mindustry/ui/dialogs/SettingsMenuDialog.java b/core/src/mindustry/ui/dialogs/SettingsMenuDialog.java
+index 6e0bd9f94bd41137ddc69bae8beb7727d12ac6c0..2ab0dd207537b56873e71412a3862d209f0f43e9 100644
+--- a/core/src/mindustry/ui/dialogs/SettingsMenuDialog.java
++++ b/core/src/mindustry/ui/dialogs/SettingsMenuDialog.java
+@@ -303,8 +303,8 @@ public class SettingsMenuDialog extends BaseDialog{
+ 
+         game.sliderPref("saveinterval", 60, 10, 5 * 120, 10, i -> Core.bundle.format("setting.seconds", i));
+ 
++        game.checkPref("autotarget", true);
+         if(mobile){
+-            game.checkPref("autotarget", true);
+             game.checkPref("keyboard", false, val -> {
+                 control.setInput(val ? new DesktopInput() : new MobileInput());
+                 input.setUseKeyboard(val);
+@@ -342,11 +342,9 @@ public class SettingsMenuDialog extends BaseDialog{
+         game.checkPref("hints", true);
+         game.checkPref("logichints", true);
+ 
+-        if(!mobile){
+-            game.checkPref("backgroundpause", true);
+-            game.checkPref("buildautopause", false);
+-            game.checkPref("distinctcontrolgroups", true);
+-        }
++        game.checkPref("backgroundpause", true);
++        game.checkPref("buildautopause", false);
++        game.checkPref("distinctcontrolgroups", true);
+ 
+         game.checkPref("doubletapmine", false);
+         game.checkPref("commandmodehold", true);
+@@ -368,9 +366,9 @@ public class SettingsMenuDialog extends BaseDialog{
+             }
+         }
+ 
+-        if(!mobile){
+-            game.checkPref("console", false);
+-        }
++        game.checkPref("console", false);
++
++        graphics.addCategory("arcCOverview");
+ 
+         int[] lastUiScale = {settings.getInt("uiscale", 100)};
+ 
+@@ -476,6 +474,8 @@ public class SettingsMenuDialog extends BaseDialog{
+         graphics.checkPref("destroyedblocks", true);
+         graphics.checkPref("blockstatus", false);
+         graphics.checkPref("playerchat", true);
++
++        graphics.addCategory("arcCgamewindow");
+         if(!mobile){
+             graphics.checkPref("coreitems", true);
+         }
+@@ -485,12 +485,12 @@ public class SettingsMenuDialog extends BaseDialog{
+             graphics.checkPref("detach-camera", false);
+         }
+         graphics.checkPref("position", false);
+-        if(!mobile){
+-            graphics.checkPref("mouseposition", false);
+-        }
++        graphics.checkPref("mouseposition", false);
+         graphics.checkPref("fps", false);
+         graphics.checkPref("playerindicators", true);
+         graphics.checkPref("indicators", true);
++
++        graphics.addCategory("arcCGraphicsOther");
+         graphics.checkPref("showweather", true);
+         graphics.checkPref("animatedwater", true);
+ 
+diff --git a/core/src/mindustry/ui/fragments/ChatFragment.java b/core/src/mindustry/ui/fragments/ChatFragment.java
+index 6202aadb499174630a04c0210e7390a0af4f6a42..dce4a6cfa280bd84ef2aac4c4d576744f29420d6 100644
+--- a/core/src/mindustry/ui/fragments/ChatFragment.java
++++ b/core/src/mindustry/ui/fragments/ChatFragment.java
+@@ -221,6 +221,8 @@ public class ChatFragment extends Table{
+             if(mobile){
+                 TextInput input = new TextInput();
+                 input.maxLength = maxTextLength;
++                //MDTX mobile chatField support (from ARC)
++                input.text = chatfield.getText() + " ";
+                 input.accepted = text -> {
+                     chatfield.setText(text);
+                     sendMessage();
+@@ -250,7 +252,12 @@ public class ChatFragment extends Table{
+     }
+ 
+     public void updateChat(){
+-        chatfield.setText(mode.normalizedPrefix() + history.get(historyPos));
++        //MDTX: better prefix handle (from ARC)
++        if(history.get(historyPos).contains(mode.normalizedPrefix())){
++            chatfield.setText(history.get(historyPos));
++        }else{
++            chatfield.setText(mode.normalizedPrefix() + history.get(historyPos));
++        }
+         updateCursor();
+     }
+ 
+diff --git a/core/src/mindustry/ui/fragments/ConsoleFragment.java b/core/src/mindustry/ui/fragments/ConsoleFragment.java
+index 3542163354070ac67c49b82dff6c72b374d4ca7d..6d2b1fbf2840eee89ab7bfcb37990e83073bf083 100644
+--- a/core/src/mindustry/ui/fragments/ConsoleFragment.java
++++ b/core/src/mindustry/ui/fragments/ConsoleFragment.java
+@@ -15,6 +15,7 @@ import arc.util.*;
+ import mindustry.game.EventType.*;
+ import mindustry.input.*;
+ import mindustry.ui.*;
++import mindustryX.features.ui.*;
+ 
+ import static arc.Core.*;
+ import static mindustry.Vars.*;
+@@ -163,6 +164,7 @@ public class ConsoleFragment extends Table{
+         clearChatInput();
+ 
+         if(message.replace(" ", "").isEmpty()) return;
++        ArcMessageDialog.Type.console.log(message);
+ 
+         //special case for 'clear' command
+         if(message.equals("clear")){
+diff --git a/core/src/mindustry/ui/fragments/HudFragment.java b/core/src/mindustry/ui/fragments/HudFragment.java
+index 396cd5df1b0e7e516f3c4fb4cba727c24e5490de..2992b9d6898b16d1b60c3e2871aba3babe9698da 100644
+--- a/core/src/mindustry/ui/fragments/HudFragment.java
++++ b/core/src/mindustry/ui/fragments/HudFragment.java
+@@ -29,10 +29,12 @@ import mindustry.net.Packets.*;
+ import mindustry.type.*;
+ import mindustry.ui.*;
+ import mindustry.world.*;
++import mindustry.world.blocks.defense.turrets.*;
+ import mindustry.world.blocks.environment.*;
+ import mindustry.world.meta.*;
+ import mindustryX.*;
+ import mindustryX.features.*;
++import mindustryX.features.ui.*;
+ 
+ import static mindustry.Vars.*;
+ import static mindustry.gen.Tex.*;
+@@ -352,6 +354,10 @@ public class HudFragment{
+             wavesMain.top().left().name = "waves";
+ 
+             wavesMain.table(s -> {
++                if(mindustryX.VarsX.arcSpecificInfoTable.get()){
++                    s.add(makeStatusTableArc()).grow().name("status");
++                    return;
++                }
+                 //wave info button with text
+                 s.add(makeStatusTable()).grow().name("status");
+ 
+@@ -392,7 +398,7 @@ public class HudFragment{
+                         button.getStyle().imageUpColor = team.color;
+                         button.update(() -> button.setChecked(player.team() == team));
+                     }
+-
++                    teams.button("更多", () -> UIExt.teamSelect.pickOne(team -> Call.setPlayerTeamEditor(player, team), player.team())).center().row();
+                     teams.button(Icon.downOpen, Styles.emptyi, () -> Core.settings.put("editor-blocks-shown", !Core.settings.getBool("editor-blocks-shown")))
+                     .size(45f).update(m -> m.getStyle().imageUp = (Core.settings.getBool("editor-blocks-shown") ? Icon.upOpen : Icon.downOpen));
+                 }).top().left().row();
+@@ -1018,6 +1024,164 @@ public class HudFragment{
+         return table;
+     }
+ 
++
++    private Table makeStatusTableArc(){
++        Table table = new Table(buttonEdge4);
++        table.marginTop(0).marginBottom(4).marginLeft(4);
++
++        table.table(t -> {
++            t.clicked(() -> {
++                if(!player.dead() && mobile){
++                    Call.unitClear(player);
++                    control.input.recentRespawnTimer = 1f;
++                    control.input.controlledType = null;
++                }
++            });
++            t.image(() -> player.icon()).size(iconMed);
++            t.row();
++
++            t.add(new Bar(
++            () -> {
++                if(player.dead()) return "";
++                if(player.unit().shield > 0){
++                    return UI.formatAmount((long)player.unit().health) + "[gray]+[white]" + UI.formatAmount((long)player.unit().shield);
++                }else{
++                    return UI.formatAmount((long)player.unit().health);
++                }
++            },
++            () -> Pal.health,
++            () -> Math.min(player.dead() ? 0 : (player.unit().health / player.unit().maxHealth), 1))).height(18).growX();
++            t.row();
++
++            t.add(new Bar(
++            () -> {
++                if(player.dead()) return "";
++                if(player.unit() instanceof BlockUnitUnit u && u.tile().buildOn() instanceof ItemTurret.ItemTurretBuild it)
++                    return ((float)it.totalAmmo > 0 ? ((ItemTurret.ItemEntry)it.ammo.peek()).item.emoji() + it.totalAmmo + "/" + ((ItemTurret)it.block).maxAmmo : "");
++                else if(state.rules.unitAmmo)
++                    return player.unit().type.ammoType.icon() + (int)player.unit().ammo + "/" + player.unit().type.ammoCapacity;
++                else return player.unit().type.ammoType.icon();
++            },
++            () -> player.dead() ? Pal.ammo : player.unit().type.ammoType.barColor(),
++            () -> player.dead() ? 0 : player.displayAmmo() ? player.unit().ammof() : 1f)).height(18).growX();
++            t.row();
++        }).size(110, 80).padRight(4);
++
++        table.table(this::buildArcStatus).growX().pad(4f);
++
++        return table;
++    }
++
++    private boolean hideObjectives = false;
++
++    private void buildArcStatus(Table table){
++        StringBuilder builder = new StringBuilder();
++        updateMission(builder);
++        boolean showSkipWave = canSkipWave();
++        boolean showMission = builder.length() > 0;
++        table.update(() -> {
++            if(showSkipWave != canSkipWave() || showMission != (builder.length() > 0)){
++                table.clear();
++                buildArcStatus(table);
++                return;
++            }
++            updateMission(builder);
++            if(hideObjectives && builder.length() > 20){
++                builder.setLength(20);
++                builder.append("...");
++            }
++        });
++        table.clicked(() -> hideObjectives = !hideObjectives);
++
++        if(showMission){
++            table.labelWrap(() -> builder).width(showSkipWave ? 150f : 190f);
++        }else{
++            table.table(tt -> {
++                tt.add(new Bar(
++                () -> {
++                    if(!state.rules.waves){
++                        if(state.rules.attackMode){
++                            int sum = Math.max(state.teams.present.sum(t -> t.team != player.team() ? t.cores.size : 0), 1);
++                            return "敌人核心：[orange]" + sum;
++                        }
++
++                        if(state.isCampaign()){
++                            return "[lightgray]" + Core.bundle.get("sector.curcapture");
++                        }
++                        return "";
++                    }
++
++                    if(state.wave <= state.rules.winWave){
++                        return "[orange]" + state.wave + "[white]/[yellow]" + state.rules.winWave;
++                    }else{
++                        return "波次：[orange]" + state.wave;
++                    }
++                },
++                () -> Color.valueOf("ccffcc"),
++                () -> {
++                    if(state.wave < state.rules.winWave)
++                        return (float)state.wave / state.rules.winWave;
++                    else return 1f;
++                })).height(18).growX().row();
++                tt.add(new Bar(
++                () -> FormatDefault.duration((float)((state.rules.waveTimer ? state.wavetime : state.tick) / 60)),
++                () -> Color.valueOf("F5DEB3"),
++                () -> state.wavetime / state.rules.waveSpacing)).height(18).growX().row();
++                tt.add(new Bar(
++                () -> {
++                    if(Vars.spawner.countSpawns() <= 1 || state.rules.mode() == Gamemode.pvp){
++                        return "[orange]" + state.enemies + "[gray](+" + calWaveEnemy(state.wave - 1) + ")";
++                    }else if(calWaveEnemy(state.wave - 1) > 0){
++                        return "[orange]" + state.enemies + "[gray](+" + calWaveEnemy(state.wave - 1) + "×" + Vars.spawner.countSpawns() + ")";
++                    }else{
++                        return "[orange]" + state.enemies + "[gray](+0)";
++                    }
++                },
++                () -> Color.valueOf("F4A460"),
++                () -> state.enemies / ((float)calWaveEnemy(state.wave - 2) * Vars.spawner.countSpawns()))).height(18).growX();
++            }).width(showSkipWave ? 150f : 190f);
++        }
++
++        if(canSkipWave()){
++            table.button(Icon.play, Styles.clearNonei, 30f, () -> {
++                if(net.client() && player.admin){
++                    Call.adminRequest(player, AdminAction.wave, null);
++                }else{
++                    logic.skipWave();
++                }
++            }).growY().fillX().right().width(40f);
++        }
++    }
++
++    public void updateMission(StringBuilder builder){
++        builder.setLength(0);
++        if(state.rules.mission!=null){
++            builder.append(state.rules.mission);
++            return;
++        }
++        if(state.rules.objectives.any()){
++            boolean first = true;
++            for(var obj : state.rules.objectives){
++                if(!obj.qualified()) continue;
++
++                String text = obj.text();
++                if(text != null){
++                    if(!first) builder.append('\n');
++                    builder.append(text);
++                    first = false;
++                }
++            }
++        }
++    }
++
++    private int calWaveEnemy(int wave){
++        int waveEnemy = 0;
++        for(SpawnGroup group : state.rules.spawns){
++            waveEnemy += group.getSpawned(Math.max(0, wave));
++        }
++        return waveEnemy;
++    }
++
+     private void addInfoTable(Table table){
+         table.name = "infotable";
+         table.left();
+@@ -1067,7 +1231,7 @@ public class HudFragment{
+     }
+ 
+     private boolean canSkipWave(){
+-        return state.rules.waves && state.rules.waveSending && ((net.server() || player.admin) || !net.active()) && state.enemies == 0 && !spawner.isSpawning();
++        return Core.settings.getBool("overrideSkipWave") || state.rules.waves && state.rules.waveSending && ((net.server() || player.admin) || !net.active()) && state.enemies == 0 && !spawner.isSpawning();
+     }
+ 
+ }
+diff --git a/core/src/mindustry/ui/fragments/MenuFragment.java b/core/src/mindustry/ui/fragments/MenuFragment.java
+index 90c843267ba9c3c59413a658c9777198296514f5..ef94d7797a159263ea5da2f2d1e445a8287cb959 100644
+--- a/core/src/mindustry/ui/fragments/MenuFragment.java
++++ b/core/src/mindustry/ui/fragments/MenuFragment.java
+@@ -45,7 +45,15 @@ public class MenuFragment{
+         parent.addChild(floatLabel = new MenuFloatLabel());
+         parent = group;
+ 
+-        parent.fill((x, y, w, h) -> renderer.render());
++        //MDTX: custom backgrounds (ARC)
++        Image img = new Image();
++        group.addChild(img);
++        img.setFillParent(true);
++        ArcOld.nextBackground(img);
++
++        parent.fill((x, y, w, h) -> {
++            if(img.getDrawable() == null) renderer.render();
++        });
+ 
+         parent.fill(c -> {
+             c.pane(Styles.noBarPane, cont -> {
+@@ -97,6 +105,11 @@ public class MenuFragment{
+             }}, ui.about::show).size(84, 45).name("info"));
+         }
+ 
++        parent.fill(c -> c.bottom().left().table(t -> {
++            t.background(Tex.buttonEdge3);
++            t.button("\uE83D", Styles.cleart, ()->ArcOld.nextBackground(img)).width(50f);
++        }).visible(() -> !ArcOld.backgroundPath.get().isEmpty()).left().width(100));
++
+         String versionText = ((Version.build == -1) ? "[#fc8140aa]" : "[#ffffffba]") + Version.combined();
+         parent.fill((x, y, w, h) -> {
+             TextureRegion logo = Core.atlas.find("logo");
+@@ -139,7 +152,7 @@ public class MenuFragment{
+             tools = new MobileButton(Icon.settings, "@settings", ui.settings::show),
+             mods = new MobileButton(Icon.book, "@mods", ui.mods::show),
+             exit = new MobileButton(Icon.exit, "@quit", () -> Core.app.exit()),
+-            about = new MobileButton(Icon.info, "@about.button", ui.about::show);
++            database = new MobileButton(Icon.book, "@database", ui.database::show);
+ 
+         Seq<MobileButton> customs = customButtons.map(b -> new MobileButton(b.icon, b.text, b.runnable == null ? () -> {} : b.runnable));
+ 
+@@ -158,11 +171,12 @@ public class MenuFragment{
+             container.add(editor);
+             container.add(tools);
+             container.add(mods);
++            container.add(database);
+             // add even custom buttons (before the exit button)
+             for(int i = 0; i < customs.size; i += 2){
+                 container.add(customs.get(i));
+             }
+-            container.add(ios ? about : exit);
++            if(!ios) container.add(exit);
+         }else{
+             container.marginTop(0f);
+             container.add(play);
+@@ -175,12 +189,14 @@ public class MenuFragment{
+             container.add(tools);
+             container.row();
+             container.add(mods);
++            container.add(database);
++            container.row();
+             // add custom buttons
+             for(int i = 0; i < customs.size; i++){
+                 container.add(customs.get(i));
+                 if(i % 2 == 0) container.row();
+             }
+-            container.add(ios ? about : exit);
++            if(!ios) container.add(exit);
+         }
+     }
+ 
+diff --git a/core/src/mindustry/ui/fragments/PlacementFragment.java b/core/src/mindustry/ui/fragments/PlacementFragment.java
+index 01ba50f19dcae39176f8dde2be5391777131826c..e37b35d706ab164ff95a9359367c250514605370 100644
+--- a/core/src/mindustry/ui/fragments/PlacementFragment.java
++++ b/core/src/mindustry/ui/fragments/PlacementFragment.java
+@@ -1,6 +1,7 @@
+ package mindustry.ui.fragments;
+ 
+ import arc.*;
++import arc.func.Boolf;
+ import arc.graphics.*;
+ import arc.input.*;
+ import arc.math.geom.*;
+@@ -26,25 +27,26 @@ import mindustry.input.*;
+ import mindustry.type.*;
+ import mindustry.ui.*;
+ import mindustry.world.*;
+-import mindustry.world.blocks.*;
++import mindustry.world.blocks.ConstructBlock;
+ import mindustry.world.blocks.ConstructBlock.*;
+ import mindustry.world.meta.*;
+ import mindustryX.features.*;
++import mindustryX.features.ui.*;
+ 
+ import static mindustry.Vars.*;
+ 
+ public class PlacementFragment{
+-    final int rowWidth = 4;
+-
+     public Category currentCategory = Category.distribution;
+ 
+     Seq<Block> returnArray = new Seq<>(), returnArray2 = new Seq<>();
+     Seq<Category> returnCatArray = new Seq<>();
+     boolean[] categoryEmpty = new boolean[Category.all.length];
+-    ObjectMap<Category,Block> selectedBlocks = new ObjectMap<>();
++    public ObjectMap<Category,Block> selectedBlocks = new ObjectMap<>();
+     ObjectFloatMap<Category> scrollPositions = new ObjectFloatMap<>();
+     @Nullable Block menuHoverBlock;
+-    @Nullable Displayable hover;
++    @Nullable Displayable hover,hover2;
++    @Nullable Tile hoverTile;
++    @Nullable Object lastDisplayTile;
+     @Nullable Building lastFlowBuild, nextFlowBuild;
+     @Nullable Object lastDisplayState;
+     @Nullable Team lastTeam;
+@@ -112,7 +114,7 @@ public class PlacementFragment{
+                 if(nextFlowBuild.liquids != null) nextFlowBuild.liquids.updateFlow();
+             }
+ 
+-            if(mindustryX.VarsX.allUnlocked.changed("placement")){
++            if(mindustryX.VarsX.allUnlocked.changed("placement") || mindustryX.VarsX.itemSelectionWidth.changed() || mindustryX.VarsX.itemSelectionHeight.changed()){
+                 rebuild();
+             }
+         });
+@@ -277,6 +279,8 @@ public class PlacementFragment{
+     }
+ 
+     public void build(Group parent){
++        int rowWidth = mindustryX.VarsX.itemSelectionWidth.get();
++        int maxRow = mindustryX.VarsX.itemSelectionHeight.get();
+         parent.fill(full -> {
+             toggler = full;
+             full.bottom().right().visible(() -> ui.hudfrag.shown);
+@@ -353,19 +357,22 @@ public class PlacementFragment{
+ 
+                         //find current hovered thing
+                         Displayable hovered = hover;
++                        Displayable hovered2 = hover2;
++                        Displayable hoveredTile = hoverTile;
+                         Block displayBlock = menuHoverBlock != null ? menuHoverBlock : control.input.block;
+                         Object displayState = displayBlock != null ? displayBlock : hovered;
+                         boolean isHovered = displayBlock == null; //use hovered thing if displayblock is null
+ 
+                         //don't refresh unnecessarily
+                         //refresh only when the hover state changes, or the displayed block changes
+-                        if(wasHovered == isHovered && lastDisplayState == displayState && lastTeam == player.team()) return;
++                        if(wasHovered == isHovered && lastDisplayState == displayState && lastDisplayTile == hoveredTile) return;
+ 
+                         topTable.clear();
+                         topTable.top().left().margin(5);
+ 
+                         lastDisplayState = displayState;
+                         wasHovered = isHovered;
++                        lastDisplayTile = hoveredTile;
+                         lastTeam = player.team();
+ 
+                         //show details of selected block, with costs
+@@ -434,6 +441,30 @@ public class PlacementFragment{
+                         }else if(hovered != null){
+                             //show hovered item, whatever that may be
+                             hovered.display(topTable);
++                            if(hovered2 != hovered && hovered2 != null){
++                                topTable.row().image().color(Pal.gray).height(2).growX().pad(8).row();
++                                hovered2.display(topTable);
++                            }
++                        }
++
++                        //只要可行便绘制地板|建筑，移除了其他重复绘制
++                        if (Core.settings.getBool("hoveredTileInfo") && hoveredTile != null) {
++                            topTable.row().table(t -> {
++                                t.left();
++                                t.defaults().left();
++                                t.image(hoverTile.floor().uiIcon).size(iconSmall).padRight(4);
++                                t.add(hoverTile.floor().localizedName).ellipsis(true).wrap().growX();
++                                if(hoverTile.block() != Blocks.air){
++                                    t.add(" | ");
++                                    t.image(hoverTile.block().uiIcon).size(iconSmall).padRight(4);
++                                    t.add(hoverTile.block().localizedName).color(hoverTile.build == null ? Color.white : hoverTile.build.team.color).ellipsis(true).wrap().growX();
++                                }
++                                if(hoverTile.overlay() != Blocks.air){
++                                    t.add(" | ");
++                                    t.image(hoverTile.overlay().uiIcon).size(iconSmall).padRight(4);
++                                    t.add(hoverTile.overlay().localizedName).ellipsis(true).wrap().growX();
++                                }
++                            }).growX().padTop(8).left();
+                         }
+                     });
+                 }).colspan(3).fillX().visible(this::hasInfoBox).touchable(Touchable.enabled).row();
+@@ -493,6 +524,8 @@ public class PlacementFragment{
+ 
+                         rebuildCommand = () -> {
+                             u.clearChildren();
++
++                            boolean arcExtra = mindustryX.VarsX.extendedCommandTable.get();
+                             var units = control.input.selectedUnits;
+                             if(units.size > 0){
+                                 usedCommands.clear();
+@@ -571,7 +604,7 @@ public class PlacementFragment{
+                                                 Call.setUnitCommand(player, units.mapInt(un -> un.id, un -> un.type.allowCommand(un, command)).toArray(), command);
+                                             }).checked(i -> activeCommands.get(command.id)).size(50f).tooltip(command.localized(), true);
+ 
+-                                            if(++scol % 6 == 0) coms.row();
++                                            if(++scol % (rowWidth + 2) == 0) coms.row();
+                                         }
+ 
+                                     }).fillX().padTop(4f).left();
+@@ -594,13 +627,67 @@ public class PlacementFragment{
+                                                 Call.setUnitStance(player, units.mapInt(un -> un.id, un -> un.type.allowStance(un, stance)).toArray(), stance, !activeStances.get(stance.id));
+                                             }).checked(i -> activeStances.get(stance.id)).size(50f).tooltip(stance.localized(), true);
+ 
+-                                            if(++scol % 6 == 0) coms.row();
++                                            if(++scol % (rowWidth + 2) == 0) coms.row();
++                                        }
++                                    }).fillX().padTop(4f).left();
++                                }
++                                if(arcExtra && units.size > 0){
++                                    u.row();
++                                    u.table(sp -> {
++                                        float wound = (float) Core.settings.getInt("rtsWoundUnit") / 100f;
++                                        if (units.contains(unit -> unit.health >= unit.maxHealth * wound) && units.contains(unit -> unit.health < unit.maxHealth * wound)){
++                                            sp.table(spp->{
++                                                arcSelectUnits(spp,"[green]\uE813","高血量单位", unit -> unit.health >= unit.maxHealth * wound);
++                                                arcSelectUnits(spp,"[red]\uE80F","低血量单位", unit -> unit.health < unit.maxHealth * wound);
++                                            });
++                                        }
++
++                                        int assistCount = units.count(unit -> unit.type.commands.contains(UnitCommand.assistCommand));
++                                        if(assistCount > 0 && assistCount != units.size){
++                                            sp.table(spp -> {
++                                                arcSelectUnits(spp, "\uE86E", "进攻性单位", unit -> !unit.type.commands.contains(UnitCommand.assistCommand));
++                                                arcSelectUnits(spp, "\uE86B", "辅助性单位", unit -> unit.type.commands.contains(UnitCommand.assistCommand));
++                                            });
++                                        }
++
++                                        boolean hasFlyer = units.contains(Unitc::isFlying),
++                                        hasLand = units.contains(unit -> !unit.isFlying() && !unit.type.naval),
++                                        hasNaval = units.contains(unit -> unit.type.naval);
++                                        if((hasFlyer ? 1 : 0) + (hasLand ? 1 : 0) + (hasNaval ? 1 : 0) >= 2){
++                                            sp.table(spp -> {
++                                                if(hasFlyer) arcSelectUnits(spp, UnitTypes.flare.emoji(), "飞行单位", Unitc::isFlying);
++                                                if(hasLand) arcSelectUnits(spp, UnitTypes.crawler.emoji(), "陆军单位", unit -> !unit.isFlying() && !unit.type.naval);
++                                                if(hasNaval) arcSelectUnits(spp, UnitTypes.retusa.emoji(), "海军单位", unit -> unit.type.naval);
++                                            });
+                                         }
+                                     }).fillX().padTop(4f).left();
+                                 }
+                             }else{
+                                 u.add(Core.bundle.get("commandmode.nounits")).color(Color.lightGray).growX().center().labelAlign(Align.center).pad(6);
+                             }
++                            if(arcExtra && mobile){
++                                u.row();
++                                u.table(sp->{
++                                    sp.button("\uE86D", Styles.cleart, () -> {
++                                        control.input.selectedUnits.clear();
++                                        control.input.commandBuildings.clear();
++                                        for(var unit : player.team().data().units){
++                                            if(unit.isCommandable()){
++                                                control.input.selectedUnits.add(unit);
++                                            }
++                                        }
++                                    }).size(40f);
++                                    sp.button(Blocks.additiveReconstructor.emoji(), Styles.cleart, () -> {
++                                        control.input.selectedUnits.clear();
++                                        control.input.commandBuildings.clear();
++                                        for(var build : player.team().data().buildings){
++                                            if(build.block.commandable){
++                                                control.input.commandBuildings.add(build);
++                                            }
++                                        }
++                                    }).size(40f);
++                                }).fillX().padTop(4f).left().row();
++                            }
+                         };
+ 
+                         u.update(() -> {
+@@ -661,7 +748,7 @@ public class PlacementFragment{
+                 {
+                     blockCatTable.table(Tex.pane2, blocksSelect -> {
+                         blocksSelect.margin(4).marginTop(0);
+-                        blockPane = blocksSelect.pane(blocks -> blockTable = blocks).height(194f).update(pane -> {
++                        blockPane = blocksSelect.pane(blocks -> blockTable = blocks).height(maxRow * 46f + 10f).update(pane -> {
+                             if(pane.hasScroll()){
+                                 Element result = Core.scene.getHoverElement();
+                                 if(result == null || !result.isDescendantOf(pane)){
+@@ -699,6 +786,17 @@ public class PlacementFragment{
+                         boolean needsAssign = categoryEmpty[currentCategory.ordinal()];
+ 
+                         int f = 0;
++                        if(maxRow > 5){
++                            categories.button(Icon.zoom, Styles.clearTogglei, () -> {
++                                ContentSelectDialog.once(content.blocks().select(block -> block.replaceable), control.input.block, block -> {
++                                    control.input.block = block;
++                                    currentCategory = block.category;
++                                    rebuildCategory.run();
++                                });
++                            }).group(group);
++                            categories.image(Styles.black6);
++                            categories.row();
++                        }
+                         for(Category cat : getCategories()){
+                             if(f++ % 2 == 0) categories.row();
+ 
+@@ -757,8 +855,9 @@ public class PlacementFragment{
+     }
+ 
+     boolean hasInfoBox(){
++        if(!state.isGame()) return false;
+         hover = hovered();
+-        return control.input.block != null || menuHoverBlock != null || hover != null;
++        return control.input.block != null || menuHoverBlock != null || hover != null || hoverTile != null;
+     }
+ 
+     /** @return the thing being hovered over. */
+@@ -766,25 +865,40 @@ public class PlacementFragment{
+         //MDTX: fix flashing. Don't clear hover if the mouse just on topTable.
+         if(Core.scene.hasMouse(Core.input.mouseX(), Core.input.mouseY()) && !topTable.hasMouse()) return null;
+ 
++        //check tile being hovered over
++        Tile hoverTile = world.tileWorld(Core.input.mouseWorld().x, Core.input.mouseWorld().y);
++        this.hoverTile = (hoverTile != null && (hoverTile.build == null || !hoverTile.build.inFogTo(player.team()))) ? hoverTile : null;
++        this.hover2 = nextFlowBuild = (hoverTile != null && hoverTile.build != null && hoverTile.build.displayable() && !hoverTile.build.inFogTo(player.team())) ? hoverTile.build : null;
++
+         //check for a unit
+-        Unit unit = Units.closestOverlap(player.team(), Core.input.mouseWorldX(), Core.input.mouseWorldY(), 5f, u -> !u.isLocal() && u.displayable());
++        Unit unit = Units.closestOverlap(player.team(), Core.input.mouseWorldX(), Core.input.mouseWorldY(), 5f, u -> u.displayable());
+         //if cursor has a unit, display it
+         if(unit != null) return unit;
++        unit = Units.closestEnemy(player.team(), Core.input.mouseWorldX(), Core.input.mouseWorldY(), 5f, u -> true);
++        if(unit != null) return unit;
+ 
+-        //check tile being hovered over
+-        Tile hoverTile = world.tileWorld(Core.input.mouseWorld().x, Core.input.mouseWorld().y);
+-        if(hoverTile != null){
+-            //if the tile has a building, display it
+-            if(hoverTile.build != null && hoverTile.build.displayable() && !hoverTile.build.inFogTo(player.team())){
+-                return nextFlowBuild = hoverTile.build;
+-            }
++        return hover2;
++    }
+ 
+-            //if the tile has a drop, display the drop
+-            if((hoverTile.drop() != null && hoverTile.block() == Blocks.air) || hoverTile.wallDrop() != null || hoverTile.floor().liquidDrop != null){
+-                return hoverTile;
+-            }
+-        }
++    void arcSelectUnits(Table table, String icon, String info, Boolf<Unit> cons){
++        float size = 40f;
+ 
+-        return null;
++        table.button(icon, Styles.cleart, () -> {}).tooltip(info).size(size).with(b->{
++            var listener = new ClickListener();
++            b.clicked(KeyCode.mouseLeft, () -> {
++                control.input.selectedUnits = control.input.selectedUnits.select(cons);
++                Events.fire(Trigger.unitCommandChange);
++                UIExt.announce("RTS控制器：选择" + info + "！");
++            });
++            //right click -> remove
++            b.clicked(KeyCode.mouseRight, () -> {
++                control.input.selectedUnits.removeAll(cons);
++                Events.fire(Trigger.unitCommandChange);
++                UIExt.announce("RTS控制器：移除" + info + "！");
++            });
++
++            b.addListener(listener);
++            b.addListener(new HandCursorListener());
++        });
+     }
+ }
+diff --git a/core/src/mindustry/ui/fragments/PlayerListFragment.java b/core/src/mindustry/ui/fragments/PlayerListFragment.java
+index 58d82ae32d4a37b4e2bea1559c854b775048350f..b0e3d09b0a8bea3bd0b32e958a05c5bc2b24ab32 100644
+--- a/core/src/mindustry/ui/fragments/PlayerListFragment.java
++++ b/core/src/mindustry/ui/fragments/PlayerListFragment.java
+@@ -10,13 +10,14 @@ import arc.scene.ui.ImageButton.*;
+ import arc.scene.ui.layout.*;
+ import arc.struct.*;
+ import arc.util.*;
+-import mindustry.game.*;
+ import mindustry.gen.*;
+ import mindustry.graphics.*;
+ import mindustry.net.*;
+ import mindustry.net.Packets.*;
+ import mindustry.ui.*;
+ import mindustry.ui.dialogs.*;
++import mindustryX.features.*;
++import mindustryX.features.ui.*;
+ 
+ import static mindustry.Vars.*;
+ 
+@@ -67,7 +68,7 @@ public class PlayerListFragment{
+                     menu.button("@close", this::toggle);
+                 }).margin(0f).pad(10f).growX();
+ 
+-            }).touchable(Touchable.enabled).margin(14f).minWidth(360f);
++            }).touchable(Touchable.enabled).margin(14f).minWidth(620f);
+         });
+ 
+         rebuild();
+@@ -78,7 +79,7 @@ public class PlayerListFragment{
+ 
+         content.clear();
+ 
+-        float h = 50f;
++        float h = 40f;
+         boolean found = false;
+ 
+         players.clear();
+@@ -86,7 +87,7 @@ public class PlayerListFragment{
+ 
+         players.sort(Structs.comps(Structs.comparing(Player::team), Structs.comparingBool(p -> !p.admin)));
+         if(search.getText().length() > 0){
+-            players.retainAll(p -> Strings.stripColors(p.name().toLowerCase()).contains(search.getText().toLowerCase()));
++            players.retainAll(p -> p.name().toLowerCase().contains(search.getText().toLowerCase()) || Strings.stripColors(p.name().toLowerCase()).contains(search.getText().toLowerCase()));
+         }
+ 
+         for(var user : players){
+@@ -119,7 +120,7 @@ public class PlayerListFragment{
+                 iconTable.addListener(listener);
+                 iconTable.addListener(new HandCursorListener());
+             }
+-            iconTable.margin(8);
++            iconTable.margin(4);
+             iconTable.add(new Image(user.icon()).setScaling(Scaling.bounded)).grow();
+             iconTable.name = user.name();
+             iconTable.touchable = Touchable.enabled;
+@@ -132,12 +133,12 @@ public class PlayerListFragment{
+             });
+ 
+             button.add(iconTable).size(h);
+-            button.labelWrap("[#" + user.color().toString().toUpperCase() + "]" + user.name()).style(Styles.outlineLabel).width(170f).pad(10);
+-            button.add().grow();
++            button.image(Icon.admin).visible(() -> user.admin && !(!user.isLocal() && net.server())).pad(4).get().updateVisibility();
++            button.labelWrap("[#" + user.color().toString().toUpperCase() + "]" + user.name()).style(Styles.outlineLabel).growX();
+ 
+-            button.background(Tex.underline);
++            button.background(Tex.underlineWhite);
++            button.setColor(state.rules.pvp || Core.settings.getBool("arcAlwaysTeamColor") ? user.team().color : Pal.gray);
+ 
+-            button.image(Icon.admin).visible(() -> user.admin && !(!user.isLocal() && net.server())).padRight(5).get().updateVisibility();
+ 
+             var ustyle = new ImageButtonStyle(){{
+                 down = Styles.none;
+@@ -147,11 +148,22 @@ public class PlayerListFragment{
+                 imageOverColor = Color.lightGray;
+             }};
+ 
++            button.button(Icon.copySmall, ustyle, () -> {
++                Core.app.setClipboardText(user.name);
++                UIExt.announce("已复制昵称：" + user.name);
++            }).size(iconMed);
++            button.button(Icon.linkSmall, ustyle, () -> ShareFeature.at(user.name)).size(iconMed);
++
++            button.button(Icon.planeOutlineSmall, ustyle, () ->
++            ui.showTextInput("@votekick.reason", Core.bundle.format("votekick.reason.message", user.name()), "", reason ->
++            Call.sendChatMessage("/votekick #" + user.id + " " + reason))
++            ).size(iconMed);
++
+             if(net.server() || (player.admin && (!user.admin || user == player))){
+                 button.add().growY();
+ 
+                 if(allowTeamSwitch || user != player){
+-                    button.button(Icon.menu, ustyle, () -> {
++                    button.button(Icon.wrenchSmall, ustyle, () -> {
+                         var dialog = new BaseDialog(user.coloredName());
+ 
+                         dialog.title.setColor(Color.white);
+@@ -187,30 +199,7 @@ public class PlayerListFragment{
+                             //there's generally no reason to team switch outside PvP or sandbox, and it's basically an easy way to cheat
+                             if(allowTeamSwitch){
+                                 t.button("@player.team", Icon.redo, bstyle, () -> {
+-                                    var teamSelect = new BaseDialog(Core.bundle.get("player.team") + ": " + user.name);
+-                                    teamSelect.setFillParent(false);
+-
+-                                    var group = new ButtonGroup<>();
+-
+-                                    int i = 0;
+-
+-                                    for(Team team : Team.baseTeams){
+-                                        var b = new ImageButton(Tex.whiteui, Styles.clearNoneTogglei);
+-                                        b.margin(4f);
+-                                        b.getImageCell().grow();
+-                                        b.getStyle().imageUpColor = team.color;
+-                                        b.clicked(() -> {
+-                                            Call.adminRequest(user, AdminAction.switchTeam, team);
+-                                            teamSelect.hide();
+-                                        });
+-                                        teamSelect.cont.add(b).size(50f).checked(a -> user.team() == team).group(group);
+-
+-                                        if(i++ % 3 == 2) teamSelect.cont.row();
+-                                    }
+-
+-                                    teamSelect.addCloseButton();
+-                                    teamSelect.show();
+-
++                                    UIExt.teamSelect.pickOne((it) -> Call.adminRequest(user, AdminAction.switchTeam, it), user.team());
+                                     dialog.hide();
+                                 }).row();
+                             }
+@@ -238,20 +227,11 @@ public class PlayerListFragment{
+                         dialog.cont.button("@back", Icon.left, dialog::hide).padTop(-1f).size(220f, 55f);
+ 
+                         dialog.show();
+-
+-
+-                    }).size(h);
++                    }).size(iconMed);
+                 }
+-            }else if(!user.isLocal() && !user.admin && net.client() && Groups.player.size() >= 3 && player.team() == user.team()){ //votekick
+-                button.add().growY();
+-
+-                button.button(Icon.hammer, ustyle,
+-                    () -> ui.showTextInput("@votekick.reason", Core.bundle.format("votekick.reason.message", user.name()), "",
+-                    reason -> Call.sendChatMessage("/votekick #" + user.id + " " + reason)))
+-                .size(h);
+             }
+ 
+-            content.add(button).width(350f).height(h + 14);
++            content.add(button).width(600f).height(h + 14);
+             content.row();
+         }
+ 

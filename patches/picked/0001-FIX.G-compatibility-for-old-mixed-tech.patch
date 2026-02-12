@@ -1,0 +1,51 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: way-zer <himc.wicp@gmail.com>
+Date: Sun, 15 Sep 2024 15:53:26 +0800
+Subject: [PATCH] FIX.G: compatibility for old mixed tech
+
+---
+ core/src/mindustry/game/Rules.java     | 5 +++++
+ core/src/mindustry/io/SaveVersion.java | 7 +++++++
+ 2 files changed, 12 insertions(+)
+
+diff --git a/core/src/mindustry/game/Rules.java b/core/src/mindustry/game/Rules.java
+index 370909f539a521552bcf68b55d1d12bff9a72aa4..4ebaf210358f4e8e3e99b89cb0fd82622029758e 100644
+--- a/core/src/mindustry/game/Rules.java
++++ b/core/src/mindustry/game/Rules.java
+@@ -168,6 +168,11 @@ public class Rules{
+     public ObjectSet<Block> revealedBlocks = new ObjectSet<>();
+     /** Unlocked content names. Only used in multiplayer when the campaign is enabled. */
+     public ObjectSet<UnlockableContent> researched = new ObjectSet<>();
++    /**
++     * Block containing these items as requirements are hidden.
++     * @deprecated May be removed in the near future.
++     * */
++    public @Deprecated ObjectSet<Item> hiddenBuildItems = Items.erekirOnlyItems.asSet();
+     /** In-map objective executor. */
+     public MapObjectives objectives = new MapObjectives();
+     /** Flags set by objectives. Used in world processors. */
+diff --git a/core/src/mindustry/io/SaveVersion.java b/core/src/mindustry/io/SaveVersion.java
+index f35061dfd8f6a012fda59dfcad3d90c82b82d253..40eddef2676cb8b9b8f1f4092b04f6b8c56e5a81 100644
+--- a/core/src/mindustry/io/SaveVersion.java
++++ b/core/src/mindustry/io/SaveVersion.java
+@@ -150,6 +150,7 @@ public abstract class SaveVersion extends SaveFileReader{
+         )));
+     }
+ 
++    @SuppressWarnings("deprecation")
+     public void readMeta(DataInput stream, WorldContext context) throws IOException{
+         StringMap map = readStringMap(stream);
+ 
+@@ -168,6 +169,12 @@ public abstract class SaveVersion extends SaveFileReader{
+             }
+         }
+ 
++        //MDTX: compatibility for old mixed tech
++        //noinspection deprecation
++        if(state.rules.planet == Planets.serpulo && !state.rules.hiddenBuildItems.contains(Items.beryllium)){
++            state.rules.planet = Planets.sun;
++        }
++
+         //replace the default serpulo env with erekir
+         if(state.rules.planet == Planets.serpulo && state.rules.hasEnv(Env.scorching)){
+             state.rules.planet = Planets.erekir;

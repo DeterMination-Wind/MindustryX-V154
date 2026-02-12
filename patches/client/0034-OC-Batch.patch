@@ -1,0 +1,80 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: way-zer <himc.wicp@gmail.com>
+Date: Thu, 25 Apr 2024 14:49:41 +0800
+Subject: [PATCH] =?UTF-8?q?OC:=20=E4=BC=98=E5=8C=96Batch=E6=80=A7=E8=83=BD?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+大幅优化渲染性能
+UPDATE1: 增加配置项，默认关闭
+UPDATE2: 优化性能；我真的已经尽力了，剩下的只能怪java慢了
+UPDATE3: 完全重写了sort，又提升了一倍sort性能
+UPDATE4: 修复一些bug，并优化性能。这次重写了IntIntMap。(排序算法相当于完全重写完了)
+UPDATE5: 修复文字渲染错误
+
+sorted不写回，减少开销。
+way-zer <himc.wicp@gmail.com> on 2024/5/28
+
+新功能：顶点合并
+way-zer <himc.wicp@gmail.com> on 2024/7/23
+
+顶点合并等优化已合并到arc上游
+way-zer <himc.wicp@gmail.com> on 2024/8/4
+---
+ core/src/mindustry/graphics/MultiPacker.java            | 2 +-
+ core/src/mindustry/world/blocks/logic/LogicDisplay.java | 7 ++++---
+ 2 files changed, 5 insertions(+), 4 deletions(-)
+
+diff --git a/core/src/mindustry/graphics/MultiPacker.java b/core/src/mindustry/graphics/MultiPacker.java
+index f3ebb3b5b53e1c1c983083644dabb1bcf1f07c67..d92d1f7c97cbad689f2d6d5843d343802fa6a86b 100644
+--- a/core/src/mindustry/graphics/MultiPacker.java
++++ b/core/src/mindustry/graphics/MultiPacker.java
+@@ -114,7 +114,7 @@ public class MultiPacker implements Disposable{
+     //editor page (sprites5.png) - all sprites needed for rendering in the editor, including block icons and a few minor sprites
+     public enum PageType{
+         //main page can be massive, but 8192 throws GL_OUT_OF_MEMORY on some GPUs and I can't deal with it yet.
+-        main(4096),
++        main(16384, 4096), //MDTX 更大图集
+ 
+         environment(4096),
+         ui(4096),
+diff --git a/core/src/mindustry/world/blocks/logic/LogicDisplay.java b/core/src/mindustry/world/blocks/logic/LogicDisplay.java
+index 49efb020afda2f66b59825119b3359ad2f0c9273..f68288f3da2993d5e2a933ba99f933aeee6498da 100644
+--- a/core/src/mindustry/world/blocks/logic/LogicDisplay.java
++++ b/core/src/mindustry/world/blocks/logic/LogicDisplay.java
+@@ -90,7 +90,7 @@ public class LogicDisplay extends Block{
+             //don't even bother processing anything when displays are off.
+             if(!Vars.renderer.drawDisplays) return;
+ 
+-            Draw.draw(Draw.z(), () -> {
++            Draw.draw(Layer.block - 0.002f, () -> {
+                 if(buffer == null){
+                     buffer = new FrameBuffer(displaySize, displaySize);
+                     //clear the buffer - some OSs leave garbage in it
+@@ -102,7 +102,7 @@ public class LogicDisplay extends Block{
+             processCommands();
+ 
+             Draw.blend(Blending.disabled);
+-            Draw.draw(Draw.z(), () -> {
++            Draw.draw(Layer.block + 0.001f, () -> {
+                 if(buffer != null){
+                     if(RenderExt.logicDisplayNoBorder){
+                         Draw.rect(Draw.wrap(buffer.getTexture()), x, y, (buffer.getWidth() + 16) * Draw.scl, -(buffer.getHeight() + 16) * Draw.scl);
+@@ -112,6 +112,7 @@ public class LogicDisplay extends Block{
+                 }
+             });
+             Draw.blend();
++            Draw.z(Layer.block);
+         }
+ 
+         @Override
+@@ -137,7 +138,7 @@ public class LogicDisplay extends Block{
+         public void processCommands(){
+             //don't bother processing commands if displays are off
+             if(!commands.isEmpty() && buffer != null){
+-                Draw.draw(Draw.z(), () -> {
++                Draw.draw(Layer.block - 0.001f, () -> {
+                     if(buffer == null) return;
+ 
+                     Tmp.m1.set(Draw.proj());

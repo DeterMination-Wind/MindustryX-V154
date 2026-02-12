@@ -1,0 +1,164 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: way-zer <himc.wicp@gmail.com>
+Date: Tue, 9 Apr 2024 18:21:14 +0800
+Subject: [PATCH] CS: MindustryX Version&Icon
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+不再发送ARC标识
+way-zer <himc.wicp@gmail.com> on 2024/9/8
+---
+ .gitignore                                         | 1 +
+ android/build.gradle                               | 2 +-
+ android/res/values/strings.xml                     | 2 +-
+ build.gradle                                       | 2 +-
+ core/build.gradle.kts                              | 2 +-
+ core/src/mindustry/Vars.java                       | 2 +-
+ core/src/mindustry/core/NetClient.java             | 2 ++
+ core/src/mindustry/core/Version.java               | 4 +++-
+ core/src/mindustry/net/NetworkIO.java              | 2 +-
+ desktop/src/mindustry/desktop/DesktopLauncher.java | 2 +-
+ 10 files changed, 13 insertions(+), 8 deletions(-)
+
+diff --git a/.gitignore b/.gitignore
+index b5b2a237c2f5343aab2fb668337c2bc47a45c1b8..308ff12c92a06e11c18b33f540098a0f1347ab5e 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -4,6 +4,7 @@ logs/
+ /core/assets/mindustry-maps/
+ /core/assets/bundles/output/
+ /core/assets/.gifimages/
++/core/assets/MindustryX.hjson
+ /deploy/
+ /out/
+ ios/libs/
+diff --git a/android/build.gradle b/android/build.gradle
+index 262147eec096507847d05c5b2a77d6e6442b8761..b18b0fcfcc734077e68dc0307f1194a09a4ceb81 100644
+--- a/android/build.gradle
++++ b/android/build.gradle
+@@ -31,7 +31,7 @@ android{
+     defaultConfig{
+         def versionNameResult = "$versionNumber-$versionType-${getBuildVersion().replace(" ", "-")}"
+ 
+-        applicationId "io.anuke.mindustry"
++        applicationId "com.github.tinylake.mindustryX"
+         minSdkVersion 21
+         targetSdkVersion 36
+         versionName versionNameResult
+diff --git a/android/res/values/strings.xml b/android/res/values/strings.xml
+index d42ffe6d4a318ce558f1010eae46140f88ed5c99..bf44ead5c58abfb79c500e6daae30c3e7c322bed 100644
+--- a/android/res/values/strings.xml
++++ b/android/res/values/strings.xml
+@@ -1,4 +1,4 @@
+ <?xml version="1.0" encoding="utf-8"?>
+ <resources>
+-    <string name="app_name">Mindustry</string>
++    <string name="app_name">MindustryX</string>
+ </resources>
+diff --git a/build.gradle b/build.gradle
+index 67c283b4f3489b33a2f479286b21b03b6991a7b9..44282365353147945178d08844d734f426fc1089 100644
+--- a/build.gradle
++++ b/build.gradle
+@@ -22,7 +22,7 @@ allprojects{
+     apply plugin: 'maven-publish'
+ 
+     version = project.hasProperty("packageVersion") ? project.getProperty("packageVersion") : 'release'
+-    group = 'com.github.Anuken'
++    group = 'cf.wayzer.MindustryX'
+ 
+     ext{
+         versionNumber = '8'
+diff --git a/core/build.gradle.kts b/core/build.gradle.kts
+index 441b4366206a21f8a5eedc433dd55b00de6a15d8..bc63d9ae23cffccb96877410c70b646fc7a3c299 100644
+--- a/core/build.gradle.kts
++++ b/core/build.gradle.kts
+@@ -48,7 +48,7 @@ tasks {
+         property("type", findProperty("versionType") ?: "official")
+         property("modifier", findProperty("versionModifier") ?: "release")
+         property("number", '7')
+-        property("build", findProperty("buildversion") ?: "custom build")
++        property("build", findProperty("upstreamBuild") ?: "custom build")
+         property("commitHash", "unknown") //TODO commitHash
+     }
+     processResources.configure {
+diff --git a/core/src/mindustry/Vars.java b/core/src/mindustry/Vars.java
+index 61f108e074656d2882bdeea2fe825dc667e56cc5..3b251b0bdf7b1e035bbd06e0df7fe5cc74f3da3f 100644
+--- a/core/src/mindustry/Vars.java
++++ b/core/src/mindustry/Vars.java
+@@ -88,7 +88,7 @@ public class Vars implements Loadable{
+     /** URLs to the JSON files containing the list of mods.  */
+     public static final String[] modJsonURLs = {"https://raw.githubusercontent.com/Anuken/MindustryMods/master/mods.json", "https://cdn.jsdelivr.net/gh/anuken/mindustrymods/mods.json"};
+     /** URL of the github issue report template.*/
+-    public static final String reportIssueURL = "https://github.com/Anuken/Mindustry/issues/new?labels=bug&template=bug_report.md";
++    public static final String reportIssueURL = "https://github.com/TinyLake/MindustryX/issues/new?labels=bug&template=bug_report.md";
+     /** list of built-in servers.*/
+     public static final Seq<ServerGroup> defaultServers = Seq.with();
+     /** cached server list - only used if defaultServers have not been fetched*/
+diff --git a/core/src/mindustry/core/NetClient.java b/core/src/mindustry/core/NetClient.java
+index c584a92125f104485547eb009544ee940b4576d1..934708b28f4b735ea2311c144315225986daa1e8 100644
+--- a/core/src/mindustry/core/NetClient.java
++++ b/core/src/mindustry/core/NetClient.java
+@@ -26,6 +26,7 @@ import mindustry.net.*;
+ import mindustry.net.Packets.*;
+ import mindustry.world.*;
+ import mindustry.world.modules.*;
++import mindustryX.*;
+ 
+ import java.io.*;
+ import java.util.*;
+@@ -144,6 +145,7 @@ public class NetClient implements ApplicationListener{
+             Log.info("Received world data: @ bytes.", data.stream.available());
+             NetworkIO.loadWorld(new InflaterInputStream(data.stream));
+ 
++            Time.run(60f, () -> Call.serverPacketReliable("MDTX", VarsX.version));
+             finishConnecting();
+         });
+     }
+diff --git a/core/src/mindustry/core/Version.java b/core/src/mindustry/core/Version.java
+index d8981d42c957bb7b79df9ca5eafbea325dcbea49..78ea113d871cb1e7492c55568822c704de9ae8b8 100644
+--- a/core/src/mindustry/core/Version.java
++++ b/core/src/mindustry/core/Version.java
+@@ -6,6 +6,7 @@ import arc.files.*;
+ import arc.struct.*;
+ import arc.util.*;
+ import arc.util.io.*;
++import mindustryX.*;
+ 
+ public class Version{
+     /** Build type. 'official' for official releases; 'custom' or 'bleeding edge' are also used. */
+@@ -79,6 +80,7 @@ public class Version{
+         if(build == -1){
+             return "custom build";
+         }
+-        return (type.equals("official") ? modifier : type) + " build " + build + (revision == 0 ? "" : "." + revision) + (commitHash.equals("unknown") ? "" : " (" + commitHash + ")");
++        return (type.equals("official") ? modifier : type) + " build " + build + (revision == 0 ? "" : "." + revision) + (commitHash.equals("unknown") ? "" : " (" + commitHash + ")") +
++        "\nMindustryX " + VarsX.version;
+     }
+ }
+diff --git a/core/src/mindustry/net/NetworkIO.java b/core/src/mindustry/net/NetworkIO.java
+index 68df216c746714ab9c7a62600fea54edec6c3259..6ff7fc477c68e159e5c65bce0a015ec1690b3692 100644
+--- a/core/src/mindustry/net/NetworkIO.java
++++ b/core/src/mindustry/net/NetworkIO.java
+@@ -110,7 +110,7 @@ public class NetworkIO{
+         buffer.putInt(Core.settings.getInt("totalPlayers", Groups.player.size()));
+         buffer.putInt(state.wave);
+         buffer.putInt(Version.build);
+-        writeString(buffer, Version.type);
++        writeString(buffer, "MindustryX");
+ 
+         buffer.put((byte)state.rules.mode().ordinal());
+         buffer.putInt(netServer.admins.getPlayerLimit());
+diff --git a/desktop/src/mindustry/desktop/DesktopLauncher.java b/desktop/src/mindustry/desktop/DesktopLauncher.java
+index cb0e8b1524d258dc9c18beef31c91407f64a5673..a500476f5a69ce40b8a543827d6c9722c94afeaa 100644
+--- a/desktop/src/mindustry/desktop/DesktopLauncher.java
++++ b/desktop/src/mindustry/desktop/DesktopLauncher.java
+@@ -100,7 +100,7 @@ public class DesktopLauncher extends ClientLauncher{
+                         }
+                     }
+                 }
+-                setWindowIcon(FileType.internal, "icons/icon_64.png");
++                setWindowIcon(FileType.internal, "icon.png");
+             }});
+         }catch(Throwable e){
+             handleCrash(e);

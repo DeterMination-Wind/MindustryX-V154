@@ -1,0 +1,98 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: way-zer <himc.wicp@gmail.com>
+Date: Sun, 18 Feb 2024 15:39:43 +0800
+Subject: [PATCH] =?UTF-8?q?HR(RenderExt)=20researchViewer(=E7=A7=91?=
+ =?UTF-8?q?=E6=8A=80=E6=A0=91=E9=80=8F=E8=A7=86)?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ core/src/mindustry/game/Objectives.java           |  4 +++-
+ core/src/mindustry/ui/dialogs/ResearchDialog.java | 11 +++++++----
+ 2 files changed, 10 insertions(+), 5 deletions(-)
+
+diff --git a/core/src/mindustry/game/Objectives.java b/core/src/mindustry/game/Objectives.java
+index fb947c4bd06e676c79ff2c4b3578e286d048e60a..1941128ce1c18c771c3660f00ae6c8a2b731f125 100644
+--- a/core/src/mindustry/game/Objectives.java
++++ b/core/src/mindustry/game/Objectives.java
+@@ -4,6 +4,7 @@ import arc.*;
+ import arc.scene.ui.layout.*;
+ import mindustry.ctype.*;
+ import mindustry.type.*;
++import mindustryX.features.*;
+ 
+ /** Holds objective classes. */
+ public class Objectives{
+@@ -26,6 +27,7 @@ public class Objectives{
+         public String display(){
+             return Core.bundle.format("requirement.research",
+                 //TODO broken for multi tech nodes.
++            RenderExt.researchViewer ||
+                 (content.techNode == null || content.techNode.parent == null || content.techNode.parent.content.unlockedHost()) ?
+                     (content.emoji() + " " + content.localizedName) : "???");
+         }
+@@ -48,7 +50,7 @@ public class Objectives{
+         @Override
+         public String display(){
+             return Core.bundle.format("requirement.produce",
+-                content.unlockedHost() ? (content.emoji() + " " + content.localizedName) : "???");
++                RenderExt.researchViewer || content.unlockedHost() ? (content.emoji() + " " + content.localizedName) : "???");
+         }
+     }
+ 
+diff --git a/core/src/mindustry/ui/dialogs/ResearchDialog.java b/core/src/mindustry/ui/dialogs/ResearchDialog.java
+index 244c04afc7f4d892b1dca301a1ab50344568682a..fbf8dde06bdf66cb336cee8eb3bbe246e43210a5 100644
+--- a/core/src/mindustry/ui/dialogs/ResearchDialog.java
++++ b/core/src/mindustry/ui/dialogs/ResearchDialog.java
+@@ -27,6 +27,7 @@ import mindustry.type.*;
+ import mindustry.ui.*;
+ import mindustry.ui.layout.*;
+ import mindustry.ui.layout.TreeLayout.*;
++import mindustryX.features.*;
+ 
+ import java.util.*;
+ 
+@@ -371,7 +372,7 @@ public class ResearchDialog extends BaseDialog{
+     }
+ 
+     void checkNodes(TechTreeNode node){
+-        boolean locked = locked(node.node);
++        boolean locked = !RenderExt.researchViewer && locked(node.node);
+         if(!locked && (node.parent == null || node.parent.visible)) node.visible = true;
+         node.selectable = selectable(node.node);
+         for(TechTreeNode l : node.children){
+@@ -383,6 +384,8 @@ public class ResearchDialog extends BaseDialog{
+     }
+ 
+     boolean selectable(TechNode node){
++        if(node.content.unlockedHost()) return true;
++        if(RenderExt.researchViewer && locked(node.parent)) return false;
+         //there's a desync here as far as sectors go, since the client doesn't know about that, but I'm not too concerned
+         return node.content.unlockedHost() || !node.objectives.contains(i -> !i.complete());
+     }
+@@ -490,7 +493,7 @@ public class ResearchDialog extends BaseDialog{
+                     button.setPosition(node.x + panX + width / 2f, node.y + panY + height / 2f + offset, Align.center);
+                     button.getStyle().up = !locked(node.node) ? Tex.buttonOver : !selectable(node.node) || (!canSpend(node.node) && !net.client()) ? Tex.buttonRed : Tex.button;
+ 
+-                    ((TextureRegionDrawable)button.getStyle().imageUp).setRegion(node.selectable ? node.node.content.uiIcon : Icon.lock.getRegion());
++                    ((TextureRegionDrawable)button.getStyle().imageUp).setRegion(node.selectable || RenderExt.researchViewer ? node.node.content.uiIcon : Icon.lock.getRegion());
+                     button.getImage().setColor(!locked(node.node) ? Color.white : node.selectable ? Color.gray : Pal.gray);
+                     button.getImage().layout();
+                 });
+@@ -645,13 +648,13 @@ public class ResearchDialog extends BaseDialog{
+             infoTable.table(b -> {
+                 b.margin(0).left().defaults().left();
+ 
+-                if(selectable){
++                if(selectable || RenderExt.researchViewer){
+                     b.button(Icon.info, Styles.flati, () -> ui.content.show(node.content)).growY().width(50f);
+                 }
+                 b.add().grow();
+                 b.table(desc -> {
+                     desc.left().defaults().left();
+-                    desc.add(selectable ? node.content.localizedName : "[accent]???");
++                    desc.add(selectable ? node.content.localizedName : RenderExt.researchViewer ? node.content.localizedName + "\n[red]未满足前置科技" : "[accent]???");
+                     desc.row();
+                     if(locked(node) || (debugShowRequirements && !net.client())){
+ 

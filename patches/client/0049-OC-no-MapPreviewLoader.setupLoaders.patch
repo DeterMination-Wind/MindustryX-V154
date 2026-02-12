@@ -1,0 +1,23 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: way-zer <himc.wicp@gmail.com>
+Date: Fri, 19 Apr 2024 12:27:50 +0800
+Subject: [PATCH] OC: no MapPreviewLoader.setupLoaders
+
+---
+ core/src/mindustry/ClientLauncher.java | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/core/src/mindustry/ClientLauncher.java b/core/src/mindustry/ClientLauncher.java
+index d1f56e112a9ab9b4acf82d6a0211db94b0f5d659..3db82e7f8a67f9f4a8ec04bbd50691ba8d5e0203 100644
+--- a/core/src/mindustry/ClientLauncher.java
++++ b/core/src/mindustry/ClientLauncher.java
+@@ -156,7 +156,8 @@ public abstract class ClientLauncher extends ApplicationCore implements Platform
+         assets.load("sprites/error.png", Texture.class);
+         atlas = TextureAtlas.blankAtlas();
+         Vars.net = new Net(platform.getNet());
+-        MapPreviewLoader.setupLoaders();
++        //MDTX: optimize performance (inspired by Foo)
++//        MapPreviewLoader.setupLoaders();
+         mods = new Mods();
+         schematics = new Schematics();
+ 
