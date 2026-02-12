@@ -185,6 +185,7 @@ public class Build{
             Tile tile = world.tile(x, y);
             return tile != null;
         }
+
         //the wave team can build whatever they want as long as it's visible - banned blocks are not applicable
         if(type == null || (!state.rules.editor && (checkVisible && (!type.environmentBuildable() || (!type.isPlaceable() && !(state.rules.waves && team == state.rules.waveTeam && type.isVisible())))))){
             return false;

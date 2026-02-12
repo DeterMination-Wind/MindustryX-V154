@@ -9,7 +9,6 @@ import mindustry.Vars;
 import mindustry.core.Version;
 import mindustry.game.EventType;
 import mindustry.mod.Mods.LoadedMod;
-import mindustry.net.Packets.ConnectPacket;
 
 /**
  * Switches mod profiles when joining different protocol versions.
@@ -69,7 +68,7 @@ public class ServerProfileSwitcher{
         Core.settings.remove(keyAutoJoinVersion);
 
         Log.infoTag("MindustryX", "Auto join " + ip + ":" + port + " with protocol " + version);
-        ConnectPacket.clientVersion = version;
+        LogicExt.applyMockProtocol(version);
         Vars.ui.join.connect(ip, port);
     }
 

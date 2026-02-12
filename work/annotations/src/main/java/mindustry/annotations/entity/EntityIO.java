@@ -243,7 +243,11 @@ public class EntityIO{
             s(type.equals("boolean") ? "bool" : type.charAt(0) + "", field);
         }else if(instanceOf(type, "mindustry.ctype.Content") && !type.equals("mindustry.ai.UnitStance") && !type.equals("mindustry.ai.UnitCommand")){
             if(write){
-                s("s", field + ".id");
+                if(name.equals("PlayerComp") && field.equals("this.selectedBlock")){
+                    st("mindustry.io.TypeIO.writeBlock(write, $L)", field);
+                }else{
+                    s("s", field + ".id");
+                }
             }else{
                 st(field + "mindustry.Vars.content.getByID(mindustry.ctype.ContentType.$L, read.s())", BaseProcessor.simpleName(type).toLowerCase().replace("type", ""));
             }

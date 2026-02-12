@@ -396,6 +396,10 @@ public class TypeIO{
     }
 
     public static void writeBlock(Writes write, Block block){
+        if(block == null){
+            write.s(-1);
+            return;
+        }
         if(LogicExt.contentsCompatibleMode){
             write.s(content.getTemporaryMapperId(block));
             return;

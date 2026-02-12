@@ -42,6 +42,7 @@ public class Hooks implements ApplicationListener{
     public void init(){
         Log.infoTag("MindustryX", "Hooks.init");
         LogicExt.init();
+        CompatDataPatches.init();
         ServerProfileSwitcher.init();
         if(!Vars.headless){
             if(AutoUpdate.INSTANCE.getActive())

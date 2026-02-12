@@ -21,6 +21,10 @@ public class LogicExt{
     private static final CheckPref invertMapClick0 = new CheckPref("gameUI.invertMapClick");
     public static final CheckPref worldCreator0 = new CheckPref("worldCreator");
     public static final CheckPref terrainSchematic0 = new CheckPref("terrainSchematic");
+    public static final CheckPref serverDataSwitch0 = new CheckPref("compat.serverDataSwitch", true);
+    static{
+        SettingsV2.INSTANCE.getCategoryOverride().put("compat.serverDataSwitch", "compat");
+    }
     public static final CheckPref reliableSync = new CheckPref("debug.reliableSync");
     public static final SliderPref limitUpdate = new SliderPref("debug.limitUpdate", 0, 0, 100, 1, (it) -> {
         if(it == 0) return "关闭";
@@ -29,6 +33,13 @@ public class LogicExt{
     public static final CheckPref rotateCanvas = new CheckPref("block.rotateCanvas");
 
     public static int limitUpdateTimer = 10;
+
+    public static void applyMockProtocol(int version){
+        ConnectPacket.clientVersion = version;
+        mockProtocol = version > 0 ? version : Version.build;
+        v146Mode = mockProtocol == 146;
+        contentsCompatibleMode = serverDataSwitch0.get() && mockProtocol != Version.build;
+    }
 
     public static void init(){
         invertMapClick0.addFallbackName("invertMapClick");
@@ -40,9 +51,7 @@ public class LogicExt{
             worldCreator = worldCreator0.get();
             terrainSchematic = terrainSchematic0.get();
             invertMapClick = invertMapClick0.get();
-            mockProtocol = ConnectPacket.clientVersion > 0 ? ConnectPacket.clientVersion : Version.build;
-            v146Mode = mockProtocol == 146;
-            contentsCompatibleMode = mockProtocol != Version.build;
+            applyMockProtocol(ConnectPacket.clientVersion > 0 ? ConnectPacket.clientVersion : Version.build);
         });
     }
 }

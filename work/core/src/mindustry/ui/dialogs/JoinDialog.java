@@ -637,7 +637,7 @@ public class JoinDialog extends BaseDialog{
     }
 
     void safeConnect(String ip, int port, int version){
-        ConnectPacket.clientVersion = Version.build;
+        LogicExt.applyMockProtocol(Version.build);
         if(version != Version.build && Version.build != -1 && version != -1){
             new Dialog((version > Version.build ? KickReason.clientOutdated : KickReason.serverOutdated).toString()){{
                 title.setAlignment(Align.center);
@@ -648,7 +648,7 @@ public class JoinDialog extends BaseDialog{
                 buttons.button("强制加入", () -> {
                     hide();
                     if(ServerProfileSwitcher.prepareAndMaybeRestart(ip, port, version)) return;
-                    ConnectPacket.clientVersion = version;
+                    LogicExt.applyMockProtocol(version);
                     connect(ip, port);
                 }).get().getLabel().setWrap(false);
                 buttons.button("@cancel", this::hide);
@@ -656,6 +656,7 @@ public class JoinDialog extends BaseDialog{
             }}.show();
         }else{
             if(ServerProfileSwitcher.prepareAndMaybeRestart(ip, port, version)) return;
+            LogicExt.applyMockProtocol(version);
             connect(ip, port);
         }
     }
