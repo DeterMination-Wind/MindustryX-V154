@@ -56,7 +56,7 @@ object AutoUpdate {
 
     val active get() = !VarsX.devVersion
 
-    const val devRepo = "DeterMination-Wind/MindustryX-154"
+    const val devRepo = "DeterMination-Wind/MindustryX-V154"
     var versions = emptyList<Release>()
     val currentBranch get() = VarsX.version.split('-', limit = 2).getOrNull(1)
     var latest: Release? = null

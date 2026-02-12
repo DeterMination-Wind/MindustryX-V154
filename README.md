@@ -1,19 +1,19 @@
 <img src=assets/icon.png height="64"> <img src=assets/sprites-override/ui/logo.png height="64">
 
 
-![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/DeterMination-Wind/MindustryX-154/build.yml?label=Building)  ![GitHub Release](https://img.shields.io/github/v/release/DeterMination-Wind/MindustryX-154?label=Latest%20Version&labelColor=blue&color=green&link=https%3A%2F%2Fgithub.com%2FDeterMination-Wind%2FMindustryX-154%2Freleases)  ![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/DeterMination-Wind/MindustryX-154/total?label=Downloads)
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/DeterMination-Wind/MindustryX-V154/build.yml?label=Building)  ![GitHub Release](https://img.shields.io/github/v/release/DeterMination-Wind/MindustryX-V154?label=Latest%20Version&labelColor=blue&color=green&link=https%3A%2F%2Fgithub.com%2FDeterMination-Wind%2FMindustryX-V154%2Freleases)  ![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/DeterMination-Wind/MindustryX-V154/total?label=Downloads)
 
 ## MindustryX
 
 - 新一代Mindustry分支，目标是打造一个 **高质量、更加开放** 的第三方生态。
 - 目前MDTX生态包括：客户端功能与优化，服务端优化，API拓展。
-- 本分支仓库：`DeterMination-Wind/MindustryX-154`，当前客户端版本号为 `V1.1`。
+- 本分支仓库：`DeterMination-Wind/MindustryX-V154`，当前客户端版本号为 `V1.1`。
 
 ### 版本号规则
 当前分支版本号使用 `V1.x` 风格（示例：`V1.1`）。
 
 ### 安装方式
-正式版在 [Releases](https://github.com/DeterMination-Wind/MindustryX-154/releases) 中下载对应平台的MDTX
+正式版在 [Releases](https://github.com/DeterMination-Wind/MindustryX-V154/releases) 中下载对应平台的MDTX
 其中：
 * apk为安卓版
 * `desktop.jar`为桌面版，
@@ -28,14 +28,14 @@
 ### 客户端功能
 为了减少迁移不适，客户端涵盖了 **绝大部分学术端功能** ，并进行大量整理和优化。 除此之外已有大量MDTX原创功能与性能优化。
 
-详见 [MDTX wiki](https://github.com/DeterMination-Wind/MindustryX-154/wiki) 或者查阅 **[Patches](./patches)**
+详见 [MDTX wiki](https://github.com/DeterMination-Wind/MindustryX-V154/wiki) 或者查阅 **[Patches](./patches)**
 
 
 **Loader 需要作为mod导入游戏**
 
 ### 贡献代码
 1. 初始化项目:
-    * 克隆使用 recursive 选项: `git clone --recursive https://github.com/DeterMination-Wind/MindustryX-154.git`    
+    * 克隆使用 recursive 选项: `git clone --recursive https://github.com/DeterMination-Wind/MindustryX-V154.git`    
     * 或者在项目目录，执行 `git submodule update --init`
 2. 应用 Patch 文件: 在 MDTX 根目录运行 `./scripts/applyPatches.sh`
 3. 修改并提交: 在 [`work/`](work) 中提交你的代码
@@ -43,7 +43,7 @@
 5. 在 MDTX 根目录里提交 Patch 文件
 
 ```shell
-  git clone --recursive https://github.com/DeterMination-Wind/MindustryX-154.git && cd MindustryX-154
+  git clone --recursive https://github.com/DeterMination-Wind/MindustryX-V154.git && cd MindustryX-V154
   git submodule update --init
   bash ./scripts/applyPatches.sh
   # Modifiy and commit inside work
@@ -72,10 +72,10 @@ See `./patches/`.
 
 ## Star History
 
-<a href="https://www.star-history.com/#DeterMination-Wind/MindustryX-154&Date">
+<a href="https://www.star-history.com/#DeterMination-Wind/MindustryX-V154&Date">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=DeterMination-Wind/MindustryX-154&type=Date&theme=dark" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=DeterMination-Wind/MindustryX-154&type=Date" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=DeterMination-Wind/MindustryX-154&type=Date" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=DeterMination-Wind/MindustryX-V154&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=DeterMination-Wind/MindustryX-V154&type=Date" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=DeterMination-Wind/MindustryX-V154&type=Date" />
  </picture>
 </a>

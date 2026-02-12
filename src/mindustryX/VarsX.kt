@@ -13,7 +13,7 @@ import mindustryX.features.SettingsV2.SliderPref
 import mindustryX.features.SettingsV2.map
 
 object VarsX {
-    const val repo = "DeterMination-Wind/MindustryX-154"
+    const val repo = "DeterMination-Wind/MindustryX-V154"
     const val qqLink = "https://qm.qq.com/cgi-bin/qm/qr?k=EpvRLTE26gKzbs8WVDxUomwu34k7a-w8&jump_from=webapi&authKey=nPltwJhZjjkhi6O4Nb/hQXhF9bn1fSK2lzo077KLOY4g2Ua80Itx1vp8PY1aDtq+"
 
     @JvmField
