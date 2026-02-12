@@ -7,10 +7,10 @@
 
 - 新一代Mindustry分支，目标是打造一个 **高质量、更加开放** 的第三方生态。
 - 目前MDTX生态包括：客户端功能与优化，服务端优化，API拓展。
-- 本分支仓库：`DeterMination-Wind/MindustryX-154`，当前客户端版本号为 `V1`。
+- 本分支仓库：`DeterMination-Wind/MindustryX-154`，当前客户端版本号为 `V1.1`。
 
 ### 版本号规则
-当前分支版本号使用 `V1` 风格（示例：`V1`）。
+当前分支版本号使用 `V1.x` 风格（示例：`V1.1`）。
 
 ### 安装方式
 正式版在 [Releases](https://github.com/DeterMination-Wind/MindustryX-154/releases) 中下载对应平台的MDTX

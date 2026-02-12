@@ -109,6 +109,7 @@ public class CallGenerator{
             }
 
             Svar var = params.get(i);
+            boolean protocol155Field = isProtocol155ClientSnapshotField(ent, var);
 
             //name of parameter
             String varName = var.name();
@@ -120,6 +121,10 @@ public class CallGenerator{
 
             if(writePlayerSkipCheck){ //write begin check
                 builder.beginControlFlow("if(mindustry.Vars.net.server())");
+            }
+
+            if(protocol155Field){
+                builder.beginControlFlow("if(mindustryX.features.LogicExt.mockProtocol >= 155)");
             }
 
             if(BaseProcessor.isPrimitive(typeName)){ //check if it's a primitive, and if so write it
@@ -134,6 +139,10 @@ public class CallGenerator{
 
                 //add statement for writing it
                 builder.addStatement(ser + "(WRITE, " + varName + ")");
+            }
+
+            if(protocol155Field){
+                builder.endControlFlow();
             }
 
             if(writePlayerSkipCheck){ //write end check
@@ -167,6 +176,7 @@ public class CallGenerator{
         //go through each parameter
         for(int i = 0; i < params.size; i++){
             Svar var = params.get(i);
+            boolean protocol155Field = isProtocol155ClientSnapshotField(ent, var);
 
             //first argument is skipped as it is always the player caller
             if(!ent.where.isServer && i == 0){
@@ -179,6 +189,10 @@ public class CallGenerator{
 
             if(writePlayerSkipCheck){ //write begin check
                 builder.beginControlFlow("if(mindustry.Vars.net.client())");
+            }
+
+            if(protocol155Field){
+                builder.beginControlFlow("if(mindustryX.features.LogicExt.mockProtocol >= 155)");
             }
 
             //full type name of parameter
@@ -201,6 +215,10 @@ public class CallGenerator{
 
                 //add statement for reading it
                 builder.addStatement("$L = $L(READ)", varName, ser);
+            }
+
+            if(protocol155Field){
+                builder.endControlFlow();
             }
 
             if(writePlayerSkipCheck){ //write end check
@@ -344,6 +362,10 @@ public class CallGenerator{
             loc.isClient && loc.isServer ? "mindustry.Vars.net.server() || mindustry.Vars.net.client()" :
             loc.isClient ? "mindustry.Vars.net.client()" :
             loc.isServer ? "mindustry.Vars.net.server()" : "false";
+    }
+
+    private static boolean isProtocol155ClientSnapshotField(MethodEntry ent, Svar var){
+        return ent.packetClassName.equals("ClientSnapshotCallPacket") && (var.name().equals("selectedBlock") || var.name().equals("selectedRotation"));
     }
 
     /** Generates handleServer / handleClient methods. */

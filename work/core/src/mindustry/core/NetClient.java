@@ -701,6 +701,8 @@ public class NetClient implements ApplicationListener{
             boolean dead = player.dead();
             Unit unit = dead ? null : player.unit();
             int uid = dead || unit == null ? -1 : unit.id;
+            Block selectedBlock = control.input == null ? null : control.input.block;
+            int selectedRotation = control.input == null ? 0 : control.input.rotation;
 
             Call.clientSnapshot(
             lastSent++,
@@ -713,6 +715,7 @@ public class NetClient implements ApplicationListener{
             unit == null ? 0f : unit.vel.x, unit == null ? 0f : unit.vel.y,
             dead ? null : unit.mineTile,
             player.boosting, player.shooting, ui.chatfrag.shown(), control.input.isBuilding,
+            selectedBlock, selectedRotation,
             player.isBuilder() && unit != null ? unit.plans : null,
             Core.camera.position.x, Core.camera.position.y,
             Core.camera.width, Core.camera.height
